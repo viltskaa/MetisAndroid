@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">metis</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="scanned_result_will_appear_here">Scanned result will appear here</string>
+    <string name="button">Button</string>
+    <string name="jkkhkjh">jkkhkjh</string>
 </resources>
