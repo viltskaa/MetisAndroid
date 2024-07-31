@@ -1,53 +1,80 @@
 package com.example.metis.api;
 
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
-import java.io.BufferedReader;
+import com.example.metis.model.ScanResult;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PythonApi {
 
-    public static void sendScannedResultToServer(String scannedString) {
-        new Thread(() -> {
-            try {
-                HttpURLConnection conn = getHttpURLConnection(scannedString);
+    private static final String BASE_URL = "http://10.0.2.2:5000/v1/android/";
+    private static final Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
+    private static final ApiService apiService = retrofit.create(ApiService.class);
 
-                try (BufferedReader br = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder response = new StringBuilder();
-                    String responseLine;
-                    while ((responseLine = br.readLine()) != null) {
-                        response.append(responseLine.trim());
+    public static void sendScannedResultToServer(String scannedString, Runnable callback) {
+        ScanResult scanResult = new ScanResult(scannedString);
+        Call<Void> call = apiService.sendScannedResult(scanResult);
+
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("ServerResponse", "String sent successfully");
+                    if (callback != null) {
+                        callback.run();
                     }
-                    Log.d("ServerResponse", response.toString());
+                } else {
+                    Log.e("ServerError", "Failed to send scanned string. Response code: " + response.code());
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }).start();
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 
-    private static @NonNull HttpURLConnection getHttpURLConnection(String scannedString) throws IOException {
-        URL url = new URL("http://10.0.2.2:5000/v1/android/receive_string");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json; utf-8");
-        conn.setRequestProperty("Accept", "application/json");
-        conn.setDoOutput(true);
+    public static void fetchQrCodeFromServer(Activity activity, ImageView imageView) {
+        Call<ResponseBody> call = apiService.fetchQrCode();
 
-        String jsonInputString = "{\"scanned_string\": \"" + scannedString + "\"}";
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    try (InputStream inputStream = response.body().byteStream()) {
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        activity.runOnUiThread(() -> imageView.setImageBitmap(bitmap));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("ServerError", "Failed to fetch QR code. Response code: " + response.code());
+                }
+            }
 
-        try (OutputStream os = conn.getOutputStream()) {
-            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-            os.write(input, 0, input.length);
-        }
-        return conn;
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 }

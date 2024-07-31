@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.metis.api.PythonApi;
-import com.example.metis.util.EncodeToHex;
 
 import java.util.Objects;
 
@@ -45,15 +44,13 @@ public class MainActivity extends AppCompatActivity {
             char pressedKey = (char) event.getUnicodeChar();
             if (pressedKey == '\n') {
                 textView.setText(scannedResult);
-                String hexString = EncodeToHex.toHexString(scannedResult);
-                PythonApi.sendScannedResultToServer(hexString);
+                PythonApi.sendScannedResultToServer(scannedResult, () -> PythonApi.fetchQrCodeFromServer(this, imageView));
                 scannedResult = "";
                 return true;
             } else {
                 scannedResult += pressedKey;
             }
         }
-
         return super.dispatchKeyEvent(event);
     }
 
