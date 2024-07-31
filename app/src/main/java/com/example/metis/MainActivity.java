@@ -1,6 +1,5 @@
 package com.example.metis;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -8,19 +7,14 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import com.example.metis.api.PythonApi;
+import com.example.metis.util.EncodeToHex;
+
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -51,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
             char pressedKey = (char) event.getUnicodeChar();
             if (pressedKey == '\n') {
                 textView.setText(scannedResult);
-                sendScannedResultToServer(scannedResult);
+                String hexString = EncodeToHex.toHexString(scannedResult);
+                PythonApi.sendScannedResultToServer(hexString);
                 scannedResult = "";
                 return true;
             } else {
@@ -69,42 +64,4 @@ public class MainActivity extends AppCompatActivity {
             imageView.setImageBitmap(photo);
         }
     }
-
-    private void sendScannedResultToServer(String scannedString) {
-        new Thread(() -> {
-            try {
-                HttpURLConnection conn = getHttpURLConnection(scannedString);
-
-                try (BufferedReader br = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder response = new StringBuilder();
-                    String responseLine;
-                    while ((responseLine = br.readLine()) != null) {
-                        response.append(responseLine.trim());
-                    }
-                    Log.d("ServerResponse", response.toString());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-    }
-
-    private static @NonNull HttpURLConnection getHttpURLConnection(String scannedString) throws IOException {
-        URL url = new URL("http://127.0.0.1:5000/v1/android/receive_string");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json; utf-8");
-        conn.setRequestProperty("Accept", "application/json");
-        conn.setDoOutput(true);
-
-        String jsonInputString = "{\"scanned_string\": \"" + scannedString + "\"}";
-
-        try (OutputStream os = conn.getOutputStream()) {
-            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-            os.write(input, 0, input.length);
-        }
-        return conn;
-    }
-
 }
