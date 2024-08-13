@@ -3,16 +3,22 @@ package com.example.metis.api;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
 import com.example.metis.model.ScanResult;
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -68,6 +74,58 @@ public class PythonApi {
                     }
                 } else {
                     Log.e("ServerError", "Failed to fetch QR code. Response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                t.printStackTrace();
+            }
+        });
+    }
+
+    public static void processImage(Activity activity, Bitmap bitmap, ImageView imageView) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        byte[] imageBytes = byteArrayOutputStream.toByteArray();
+        String imageBase64 = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("image", imageBase64);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        RequestBody requestBody = RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                jsonObject.toString()
+        );
+
+        Call<ResponseBody> call = apiService.processImage(requestBody);
+
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseBody = response.body().string();
+                        Log.d("ServerResponse", "Response: " + responseBody);
+
+                        JSONObject jsonResponse = new JSONObject(responseBody);
+                        String imgBase64 = jsonResponse.getString("imgBase64");
+                        byte[] decodedString = Base64.decode(imgBase64, Base64.DEFAULT);
+                        Bitmap processedBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+                        activity.runOnUiThread(() -> imageView.setImageBitmap(processedBitmap));
+
+                        Log.d("Contours", jsonResponse.getJSONArray("contours").toString());
+                        Log.d("Colors", jsonResponse.getJSONArray("colors").toString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("ServerError", "Failed to process image. Response code: " + response.code());
                 }
             }
 
