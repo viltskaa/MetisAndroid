@@ -5,4 +5,5 @@
     <string name="button">Button</string>
     <string name="jkkhkjh">jkkhkjh</string>
     <string name="gallerybutton">GalleryButton</string>
+    <string name="patternbutton">PatternButton</string>
 </resources>

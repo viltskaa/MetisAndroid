@@ -20,6 +20,7 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
     private static final int CAMERA_REQUEST = 3;
     private static final int GALLERY_REQUEST = 4;
+    private static final int PATTERN_REQUEST = 5;
     private ImageView imageView;
     private TextView textView;
     private String scannedResult = "";
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         this.textView = this.findViewById(R.id.textView);
         Button photoButton = this.findViewById(R.id.button);
         Button galleryButton = this.findViewById(R.id.galleryButton);
+        Button patternButton = this.findViewById(R.id.patternButton);
 
         photoButton.setOnClickListener(v -> {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -42,6 +44,11 @@ public class MainActivity extends AppCompatActivity {
         galleryButton.setOnClickListener(v -> {
             Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(galleryIntent, GALLERY_REQUEST);
+        });
+
+        patternButton.setOnClickListener(v -> {
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, PATTERN_REQUEST);
         });
 
     }
@@ -75,11 +82,22 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            } else if (requestCode == PATTERN_REQUEST) {
+                try {
+                    photo = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
-            if (photo != null) {
+            if (photo != null & requestCode == GALLERY_REQUEST) {
                 imageView.setImageBitmap(photo);
                 PythonApi.processImage(this, photo, imageView);
+            }
+
+            if (photo != null & requestCode == PATTERN_REQUEST) {
+                imageView.setImageBitmap(photo);
+                PythonApi.addPattern(this, photo, imageView);
             }
         }
     }

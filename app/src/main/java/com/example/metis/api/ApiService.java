@@ -18,4 +18,7 @@ public interface ApiService {
 
     @POST("processing_cv")
     Call<ResponseBody> processImage(@Body RequestBody requestBody);
+
+    @POST("add_pattern")
+    Call<ResponseBody> addPattern(@Body RequestBody requestBody);
 }
