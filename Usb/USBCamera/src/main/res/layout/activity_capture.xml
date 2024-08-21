@@ -82,8 +82,8 @@
 
             <RelativeLayout
                 android:id="@+id/colors_layout"
-                android:layout_width="match_parent"
-                android:layout_height="411dp"
+                android:layout_width="98dp"
+                android:layout_height="38dp"
                 android:layout_weight="1">
 
                 <ListView
@@ -94,9 +94,9 @@
             </RelativeLayout>
 
             <RelativeLayout
-                android:id="@+id/camera_layout_new"
-                android:layout_width="396dp"
-                android:layout_height="302dp"
+                android:id="@+id/camera_layout_res"
+                android:layout_width="match_parent"
+                android:layout_height="275dp"
                 android:layout_weight="1">
 
                 <com.serenegiant.widget.UVCCameraTextureView
@@ -114,6 +114,31 @@
                     android:layout_alignTop="@+id/camera_view_new"
                     android:layout_alignRight="@+id/camera_view_new"
                     android:layout_alignBottom="@+id/camera_view_new"
+                    android:src="@drawable/border" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/camera_layout_side"
+                android:layout_width="396dp"
+                android:layout_height="302dp"
+                android:layout_weight="1">
+
+                <com.serenegiant.widget.UVCCameraTextureView
+                    android:id="@+id/camera_view_side"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true" />
+
+                <ImageView
+                    android:id="@+id/image_view_side"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignLeft="@+id/camera_view_side"
+                    android:layout_alignTop="@+id/camera_view_side"
+                    android:layout_alignRight="@+id/camera_view_side"
+                    android:layout_alignBottom="@+id/camera_view_side"
                     android:src="@drawable/border" />
 
             </RelativeLayout>

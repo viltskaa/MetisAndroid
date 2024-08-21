@@ -1,9 +1,9 @@
 package com.dynamsoft.usbcamera;
 
 import android.graphics.Bitmap;
+import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -21,11 +21,8 @@ import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.widget.CameraViewInterface;
 
-import java.io.File;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -34,7 +31,7 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
 
     private static final boolean DEBUG = true;    // TODO set false on release
 
-    public static final String TAG = "!!!";
+    public static final String TAG = "!";
 
     private final Object mSync = new Object();
 
@@ -58,25 +55,21 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
 
     private USBMonitor mUSBMonitor;
 
-    private USBMonitor.UsbControlBlock firstBlock;
+    private USBMonitor.UsbControlBlock mainBlock;
 
-    private USBMonitor.UsbControlBlock secondBlock;
+    private USBMonitor.UsbControlBlock sideBlock;
 
-    private UsbDevice firstCamera;
+    private UsbDevice mainCamera;
 
-    private UsbDevice secondCamera;
-
-    private Button firstCameraButton;
-
-    private Button secondCameraButton;
+    private UsbDevice sideCamera;
 
     private UVCCameraHandler mCameraHandler;
 
     private CameraViewInterface mUVCCameraView;
 
-    private ImageView imageOld;
+    private ImageView sideImage;
 
-    private ImageView imageNew;
+    private ImageView mainImage;
 
     private boolean isActive = false;
 
@@ -86,76 +79,40 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "onCreate:");
+        if (DEBUG) Log.d(TAG, "onCreate");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_capture);
-        imageOld = (ImageView) findViewById(R.id.image_view);
-        imageOld.setVisibility(View.INVISIBLE);
+        sideImage = (ImageView) findViewById(R.id.image_view_side);
+//        sideImage.setVisibility(View.INVISIBLE);
 
-        imageNew = (ImageView) findViewById(R.id.image_view_new);
+        mainImage = (ImageView) findViewById(R.id.image_view_new);
 
         Button scan = (Button) findViewById(R.id.scan_button);
-        scan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mCameraHandler.setPreviewCallback(mIFrameCallback);
+        scan.setOnClickListener(view -> {
+            mCameraHandler.setPreviewCallback(mIFrameCallback);
 //                if(bitmap != null){
 //                    processImage(bitmap);
 //                }
-            }
         });
 
         Button test = (Button) findViewById(R.id.test_button);
-        test.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mCameraHandler.setPreviewCallback(mIFrameCallback);
+        test.setOnClickListener(view -> {
+            mCameraHandler.setPreviewCallback(mIFrameCallback);
 //                if(bitmap != null){
 //                    processImage(bitmap);
 //                }
-            }
         });
 
 
-        firstCameraButton = (Button) findViewById(R.id.first_button);
-        firstCameraButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                Log.d(TAG, "firstB");
+        Button mainCameraButton = (Button) findViewById(R.id.first_button);
+        mainCameraButton.setOnClickListener(view -> previewMainCamera());
 
-                try {
-                    if(firstBlock == null)
-                        firstBlock = mUSBMonitor.openDevice(firstCamera);
-
-                    startPreview(firstBlock);
-                }catch (Exception ex){
-                    Log.w(TAG, "EXCEPTION in OnClickListener first_button! " + ex.getMessage());
-                }
-
-            }
-        });
-
-        secondCameraButton = (Button) findViewById(R.id.second_button);
-        secondCameraButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                Log.d(TAG, "secondB");
-
-                try {
-                    if(secondBlock == null)
-                        secondBlock = mUSBMonitor.openDevice(secondCamera);
-
-                    startPreview(secondBlock);
-
-                }catch (Exception ex){
-                    Log.w(TAG, "EXCEPTION in OnClickListener second_button! " + ex.getMessage());
-                }
-            }
-        });
+        Button sideCameraButton = (Button) findViewById(R.id.second_button);
+        sideCameraButton.setOnClickListener(view -> previewSideCamera());
 
         mUVCCameraView = (CameraViewInterface) findViewById(R.id.camera_view);
         mUVCCameraView.setAspectRatio(PREVIEW_WIDTH / (double) PREVIEW_HEIGHT);
@@ -200,7 +157,7 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "onDestroy:");
+        if (DEBUG) Log.d(TAG, "onDestroy");
         synchronized (mSync) {
             if (mCameraHandler != null) {
                 mCameraHandler.setPreviewCallback(null);
@@ -220,60 +177,61 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
     private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
         @Override
         public void onAttach(final UsbDevice device) {
-            Log.d(TAG,"ATTACHED " + device.getDeviceName() );
-            Toast.makeText(CaptureActivity.this, "ATTACHED " + device.getDeviceName(), Toast.LENGTH_SHORT).show();
+            if (DEBUG) Log.d(TAG,"ATTACHED " + device.getDeviceId() );
+            Toast.makeText(CaptureActivity.this, "ATTACHED " + device.getDeviceId(), Toast.LENGTH_SHORT).show();
 
-            if(firstCamera == null)
-                firstCamera = device;
-            else
-                secondCamera = device;
+            if(mainCamera == null && device.getDeviceId() % 2 == 1)
+                mainCamera = device;
+            else if (sideCamera == null && device.getDeviceId() % 2 == 0)
+                sideCamera = device;
 
             mUSBMonitor.requestPermission(device);
         }
 
         @Override
         public void onConnect(final UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock, final boolean createNew) {
-            if (DEBUG) Log.v(TAG, "onConnect: " + device.getDeviceName());
+            if (DEBUG) Log.d(TAG, "onConnect: " + device.getDeviceId());
 
             try {
                 synchronized (mSync) {
-                    if (firstBlock == null && device.getDeviceName().equals(firstCamera.getDeviceName())) {
-                        firstBlock = ctrlBlock;
+                    if (mainBlock == null && mainCamera != null && device.getDeviceId() == mainCamera.getDeviceId()) {
+                        mainBlock = ctrlBlock;
+                        startPreview(ctrlBlock);
                     }
-                    else if (secondBlock == null && device.getDeviceName().equals(secondCamera.getDeviceName())) {
-                        secondBlock = ctrlBlock;
+                    else if (sideBlock == null && sideCamera != null && device.getDeviceId() == sideCamera.getDeviceId()) {
+                        sideBlock = ctrlBlock;
                     }
-
-                    startPreview(ctrlBlock);
                 }
             }catch (Exception ex){
-                Log.w(TAG, Objects.requireNonNull(ex.getMessage()));
+                Log.e(TAG, "EXCEPTION in onConnect! " + ex.getMessage());
             }
         }
 
         @Override
         public void onDisconnect(final UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock) {
-            if (DEBUG) Log.v(TAG, "onDisconnect:");
+            if (DEBUG) Log.d(TAG, "onDisconnect: " + device.getDeviceId());
+            if (DEBUG) Log.d(TAG, " ctrlBlock.getDeviceId()" + ctrlBlock.getDeviceId());
 
             synchronized (mSync) {
                 if (mCameraHandler != null) {
                     try {
                         // maybe throw java.lang.IllegalStateException: already released
                         mCameraHandler.setPreviewCallback(null); //zhf
+
                         mCameraHandler.close();
 
-                        if(ctrlBlock == firstBlock){
-                            Log.d(TAG, "ctrlBlock == secondBlock");
-                            firstBlock = null;
+                        if(ctrlBlock.getDeviceId() == mainBlock.getDeviceId()){
+                            if (DEBUG) Log.d(TAG, "ctrlBlock == secondBlock");
+                            mainBlock = null;
                         }
 
-                        if(ctrlBlock == secondBlock){
-                            Log.d(TAG, "ctrlBlock == secondBlock");
-                            secondBlock = null;
+                        if(ctrlBlock.getDeviceId() == sideBlock.getDeviceId()){
+                            if (DEBUG) Log.d(TAG, "ctrlBlock == secondBlock");
+                            sideBlock = null;
                         }
 
                     } catch (Exception ex) {
-                        Log.w(TAG, Objects.requireNonNull(ex.getMessage()));
+                        Log.w(TAG, "EXCEPTION in onDisconnect! " + ex.getMessage());
                     }
                 }
             }
@@ -284,78 +242,161 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
             Toast.makeText(CaptureActivity.this, "USB_DEVICE_DETACHED", Toast.LENGTH_SHORT).show();
 
             if(device != null) {
-                if (device.getDeviceName().equals(firstCamera.getDeviceName()))
-                    firstCamera = null;
+                if (device.getDeviceId() == mainCamera.getDeviceId())
+                    mainCamera = null;
 
-                if (device.getDeviceName().equals(secondCamera.getDeviceName()))
-                    secondCamera = null;
+                if (device.getDeviceId() == sideCamera.getDeviceId())
+                    sideCamera = null;
             }
         }
 
         @Override
         public void onCancel(final UsbDevice device) {
-            if (device.getDeviceName().equals(firstCamera.getDeviceName()))
-                firstCamera = null;
+            if (device.getDeviceId() == mainCamera.getDeviceId())
+                mainCamera = null;
 
-            if (device.getDeviceName().equals(secondCamera.getDeviceName()))
-                secondCamera = null;
+            if (device.getDeviceId() == sideCamera.getDeviceId())
+                sideCamera = null;
         }
     };
 
+    private void previewMainCamera(){
+        if (DEBUG) Log.d(TAG, "previewMainCamera");
+
+        try {
+            if(mainBlock == null)
+                mainBlock = mUSBMonitor.openDevice(mainCamera);
+
+            startPreview(mainBlock);
+
+        }catch (Exception ex){
+            Log.w(TAG, "EXCEPTION in previewMainCamera! " + ex.getMessage());
+        }
+    }
+
+    private void previewSideCamera(){
+        if (DEBUG) Log.d(TAG, "previewSideCamera");
+
+        try {
+            if(sideBlock == null)
+                sideBlock = mUSBMonitor.openDevice(sideCamera);
+
+            startPreview(sideBlock);
+            isSide = true;
+            if (DEBUG) Log.d(TAG, "isSide = true");
+            mCameraHandler.setPreviewCallback(mIFrameCallback);
+        }catch (Exception ex){
+            Log.w(TAG, "EXCEPTION in previewSideCamera! " + ex.getMessage());
+        }
+    }
 
     private void startPreview(USBMonitor.UsbControlBlock ctrlBlock){
         synchronized (mSync) {
             try {
-                Log.d(TAG, "startPreview");
-
-                if(isActive){
-                    Log.d(TAG, "Уже есть активная камера");
-                    return;
-                }
+                Log.d(TAG, "startPreview: " + ctrlBlock.getDeviceId());
 
                 if (mCameraHandler != null) {
+                    Log.d(TAG, "1: ");
 
-                    if(mCameraHandler.isPreviewing())
-                        mCameraHandler.stopPreview();
+//                    ctrlBlock.close();
+//                    mCameraHandler.stopPreview();
+                    Log.d(TAG, "2: ");
 
                     mCameraHandler.open(ctrlBlock);
+                    Log.d(TAG, "3: ");
 //                    mCameraHandler1.setPreviewCallback(mIFrameCallback);
-                    mCameraHandler.startPreview(new Surface(mUVCCameraView.getSurfaceTexture()));
+
+                    SurfaceTexture surfaceTexture = mUVCCameraView.getSurfaceTexture();
+                    if(surfaceTexture == null){
+                        Log.d(TAG, "surfaceTexture == null");
+                        return;
+                    }
+                    Log.d(TAG, "4: ");
+                    Surface surface = new Surface(surfaceTexture);
+
+                    mCameraHandler.startPreview(surface);
+                    Log.d(TAG, "5: ");
+
                     isActive = true;
                 }
             }catch (Exception ex){
-                Log.w(TAG, Objects.requireNonNull(ex.getMessage()));
+                Log.e(TAG, "EXCEPTION in startPreview! " + ex.getMessage());
             }
         }
     }
 
 
-    private void captureStillImage() {
-        if (mCameraHandler != null && mCameraHandler.isOpened()) {
-            // Генерация уникального имени файла на основе времени
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            String fileName = "IMG_" + timeStamp + ".jpg";
+    BitmapWrapper mainBitmap;
+    BitmapWrapper sideBitmap;
 
-            // Путь к папке для сохранения изображений
-            File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyAppImages");
-            if (!storageDir.exists()) {
-                storageDir.mkdirs(); // Создание папки, если она не существует
+    private final Bitmap bitmap = Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
+
+    private final Timer timer = new Timer();
+
+    private boolean isSide = false;
+
+    private final IFrameCallback mIFrameCallback = new IFrameCallback() {
+        @Override
+        public void onFrame(final ByteBuffer frame) {
+            Log.d(TAG, "OnFrame");
+            frame.clear();
+
+            if(mainBitmap == null) {
+                mainBitmap = new BitmapWrapper(PREVIEW_WIDTH, PREVIEW_HEIGHT, frame);
+                mainImage.post(() -> mainImage.setImageBitmap(mainBitmap.getBitmap()));
             }
-
-            // Полный путь к файлу
-            String filePath = new File(storageDir, fileName).getAbsolutePath();
-
-            // Захват изображения и сохранение по указанному пути
-            mCameraHandler.captureStill(fileName);
-
-            mCameraHandler.captureStill();
-
-            Toast.makeText(this, "Image captured: " + filePath, Toast.LENGTH_SHORT).show();
-            Log.w(TAG, "Image captured: " + filePath);
-        } else {
-            Toast.makeText(this, "Camera is not opened", Toast.LENGTH_SHORT).show();
-            Log.w(TAG, "Camera is not opened");
+            else if(sideBitmap == null) {
+                if(!isSide){
+                    mainBlock.close();
+                }
+                else {
+                    sideBitmap = new BitmapWrapper(PREVIEW_WIDTH, PREVIEW_HEIGHT, frame);
+                    sideImage.post(() -> sideImage.setImageBitmap(sideBitmap.getBitmap()));
+                }
+            }
+            else{
+                mCameraHandler.setPreviewCallback(null);
+                processImages();
+            }
         }
+    };
+
+    private final Runnable mUpdateImageTask = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (bitmap) {
+                mainImage.setImageBitmap(bitmap);
+            }
+        }
+    };
+
+    private void processImages(){
+        Log.d(TAG, "processImages");
+//        PythonApi.processImages(this, mainBitmap.getBitmap(), sideBitmap.getBitmap(), imageNew, () -> {
+//            Log.d(TAG, "CallBAck");
+//            timer.schedule(new TimerTask() {
+//                public void run() {
+//                    if(mCameraHandler.isOpened() && mCameraHandler != null){
+//                        Log.d(TAG, "TASK");
+//                        mCameraHandler.setPreviewCallback(mIFrameCallback);
+//                    }
+//                }
+//            }, 10 * 1000);
+//        });
+    }
+
+    private void processImage(Bitmap bitmap){
+        PythonApi.processImage(this, bitmap, mainImage, () -> {
+            Log.d(TAG, "CallBAck");
+            timer.schedule(new TimerTask() {
+                public void run() {
+                    if(mCameraHandler.isOpened() && mCameraHandler != null){
+                        Log.d(TAG, "TASK");
+                        mCameraHandler.setPreviewCallback(mIFrameCallback);
+                    }
+                }
+            }, 10 * 1000);
+        });
     }
 
     private final UVCCameraHandler.CameraCallback callback = new UVCCameraHandler.CameraCallback(){
@@ -395,133 +436,6 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
             Log.d(TAG, "CameraCallback : onError " + e.getMessage());
         }
     };
-
-    Bitmap bitmapOld;
-    Bitmap bitmapNew;
-
-    BitmapWrapper mainBitmap;
-    BitmapWrapper sideBitmap;
-
-    Bitmap bitmap = Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
-
-    boolean check = false;
-
-    private final Timer timer = new Timer();
-
-    private final IFrameCallback mIFrameCallback = new IFrameCallback() {
-        @Override
-        public void onFrame(final ByteBuffer frame) {
-            Log.d(TAG, "OnFrame");
-            frame.clear();
-
-            if(mainBitmap == null)
-                mainBitmap = new BitmapWrapper(PREVIEW_WIDTH, PREVIEW_HEIGHT, frame);
-
-            else if(sideBitmap == null)
-                sideBitmap = new BitmapWrapper(PREVIEW_WIDTH, PREVIEW_HEIGHT, frame);
-
-            else{
-                mCameraHandler.setPreviewCallback(null);
-                processImages();
-            }
-        }
-    };
-
-    private final IFrameCallback mIFrameCallback_one_send = new IFrameCallback() {
-        @Override
-        public void onFrame(final ByteBuffer frame) {
-            Log.d(TAG, "OnFrame");
-            mCameraHandler.setPreviewCallback(null);
-            frame.clear();
-
-            bitmap.copyPixelsFromBuffer(frame);
-
-//            imageNew.post(mUpdateImageTask);
-
-            processImage(bitmap);
-        }
-    };
-
-    private final IFrameCallback mIFrameCallback_old_new = new IFrameCallback() {
-        @Override
-        public void onFrame(final ByteBuffer frame) {
-            Log.d(TAG, "OnFrame");
-            mCameraHandler.setPreviewCallback(null);
-            frame.clear();
-
-            if(!check) {
-                check = true;
-                startTime = new Date();
-                timer.schedule(new TimerTask() {
-                    public void run() {
-                        if(mCameraHandler.isOpened() && mCameraHandler != null){
-                            Log.d(TAG, "TASK");
-                            mCameraHandler.setPreviewCallback(mIFrameCallback);
-                        }
-                    }
-                }, startTime, 100);
-            }
-
-            if(bitmapOld == null) {
-                Log.d(TAG, "bitmapOld == null");
-                bitmapOld = Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
-                bitmapOld.copyPixelsFromBuffer(frame);
-                imageOld.setImageBitmap(bitmapOld);
-            }
-
-            else if (bitmapNew == null){
-                Log.d(TAG, "bitmapNew == null");
-                bitmapNew = Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
-                bitmapNew.copyPixelsFromBuffer(frame);
-                imageNew.setImageBitmap(bitmapNew);
-            }
-            else{
-                Log.d(TAG, "else");
-                bitmapOld = Bitmap.createBitmap(bitmapNew);
-                imageOld.setImageBitmap(bitmapOld);
-
-                bitmapNew.copyPixelsFromBuffer(frame);
-                imageNew.setImageBitmap(bitmapNew);
-            }
-        }
-    };
-
-    private final Runnable mUpdateImageTask = new Runnable() {
-        @Override
-        public void run() {
-            synchronized (bitmap) {
-                imageNew.setImageBitmap(bitmap);
-            }
-        }
-    };
-
-    private void processImages(){
-        PythonApi.processImages(this, mainBitmap.getBitmap(), sideBitmap.getBitmap(), imageNew, () -> {
-            Log.d(TAG, "CallBAck");
-            timer.schedule(new TimerTask() {
-                public void run() {
-                    if(mCameraHandler.isOpened() && mCameraHandler != null){
-                        Log.d(TAG, "TASK");
-                        mCameraHandler.setPreviewCallback(mIFrameCallback);
-                    }
-                }
-            }, 10 * 1000);
-        });
-    }
-
-    private void processImage(Bitmap bitmap){
-        PythonApi.processImage(this, bitmap, imageNew, () -> {
-            Log.d(TAG, "CallBAck");
-            timer.schedule(new TimerTask() {
-                public void run() {
-                    if(mCameraHandler.isOpened() && mCameraHandler != null){
-                        Log.d(TAG, "TASK");
-                        mCameraHandler.setPreviewCallback(mIFrameCallback);
-                    }
-                }
-            }, 10 * 1000);
-        });
-    }
 
     @Override
     public USBMonitor getUSBMonitor() {
