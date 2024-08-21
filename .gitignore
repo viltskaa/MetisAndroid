@@ -3,7 +3,7 @@
 
 ### Android ###
 # Gradle files
-Usb/.gradle/
+Usb/.gradle
 Usb/build/
 
 # Local configuration file (sdk path, etc)
@@ -21,7 +21,7 @@ output.json
 
 # IntelliJ
 *.iml
-Usb/.idea/
+Usb/.idea
 Usb/misc.xml
 Usb/deploymentTargetDropDown.xml
 Usb/render.experimental.xml
