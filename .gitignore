@@ -3,8 +3,8 @@
 
 ### Android ###
 # Gradle files
-.gradle/
-build/
+Usb/.gradle/
+Usb/build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -21,10 +21,10 @@ output.json
 
 # IntelliJ
 *.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+Usb/.idea/
+Usb/misc.xml
+Usb/deploymentTargetDropDown.xml
+Usb/render.experimental.xml
 
 # Keystore files
 *.jks
