@@ -191,6 +191,7 @@ public class CaptureActivity extends BaseActivity implements CameraDialog.Camera
         @Override
         public void onConnect(final UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock, final boolean createNew) {
             if (DEBUG) Log.d(TAG, "onConnect: " + device.getDeviceId());
+            if (DEBUG) Log.d(TAG, "createNew " + createNew);
 
             try {
                 synchronized (mSync) {
