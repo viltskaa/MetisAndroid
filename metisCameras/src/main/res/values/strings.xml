@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name" translatable="false">MetisCameras</string>
+
+    <string name="first_camera" translatable="false">first</string>
+    <string name="second_camera" translatable="false">second</string>
+    <string name="scan" translatable="false">scan</string>
+    <string name="test" translatable="false">test send</string>
+
+    <string name="rgb" translatable="false">RGB:</string>
+</resources>

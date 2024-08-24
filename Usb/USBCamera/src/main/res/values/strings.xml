@@ -1,9 +1,0 @@
-<resources>
-    <string name="first_camera">first</string>
-    <string name="second_camera">second</string>
-    <string name="scan">scan</string>
-    <string name="test">test send</string>
-
-    <string name="rgb">RGB:</string>
-<!--    <string name="rgbs">RGB:</string>-->
-</resources>
