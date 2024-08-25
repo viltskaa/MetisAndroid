@@ -93,6 +93,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 	private static final int MSG_MEDIA_UPDATE = 7;
 	private static final int MSG_RELEASE = 9;
 	private static final int MSG_CAMERA_FOCUS = 10;
+	private static final int MSG_SET_PREVIEW_CALLBACK = 11;
 
 	private final WeakReference<AbstractUVCCameraHandler.CameraThread> mWeakThread;
 	private volatile boolean mReleased;
@@ -172,6 +173,11 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			throw new IllegalArgumentException("surface should be one of SurfaceHolder, Surface or SurfaceTexture");
 		}
 		sendMessage(obtainMessage(MSG_PREVIEW_START, surface));
+	}
+
+	protected void setPreviewCallback(IFrameCallback callback) {
+		this.checkReleased();
+		this.sendMessage(this.obtainMessage(11, callback));
 	}
 
 	public void stopPreview() {
@@ -349,6 +355,9 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		case MSG_CAMERA_FOCUS:
 			thread.handleCameraFocus();
 			break;
+		case MSG_SET_PREVIEW_CALLBACK:
+			thread.handleSetPreviewCallback((IFrameCallback)msg.obj);
+			break;
 		default:
 			throw new RuntimeException("unsupported message:what=" + msg.what);
 		}
@@ -366,6 +375,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		private float mBandwidthFactor;
 		private boolean mIsPreviewing;
 		private boolean mIsRecording;
+		private IFrameCallback mFrameCallback;
 		private AbstractUVCCameraHandler mHandler;
 		/**
 		 * for accessing UVC camera
@@ -408,6 +418,14 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		protected void finalize() throws Throwable {
 			Log.i(TAG, "CameraThread#finalize");
 			super.finalize();
+		}
+
+		public void handleSetPreviewCallback(IFrameCallback frameCallback) {
+			this.mFrameCallback = frameCallback;
+			if (this.mUVCCamera != null) {
+				Log.v("zhf_debug", "handleSetPreviewCallback: frameCallback=" + frameCallback);
+				this.mUVCCamera.setFrameCallback(this.mFrameCallback, 2);
+			}
 		}
 
 		public AbstractUVCCameraHandler getHandler() {
@@ -507,6 +525,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			} else {
 				mUVCCamera.setPreviewTexture((SurfaceTexture)surface);
 			}
+			this.mUVCCamera.setFrameCallback(this.mFrameCallback, 2);
 			mUVCCamera.startPreview();
 			mUVCCamera.updateCameraParams();
 			synchronized (mSync) {

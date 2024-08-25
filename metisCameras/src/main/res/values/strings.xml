@@ -3,6 +3,8 @@
 
     <string name="first_camera" translatable="false">first</string>
     <string name="second_camera" translatable="false">second</string>
+    <string name="start" translatable="false">start</string>
+    <string name="stop" translatable="false">stop</string>
     <string name="scan" translatable="false">scan</string>
     <string name="test" translatable="false">test send</string>
 
