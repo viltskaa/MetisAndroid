@@ -9,60 +9,61 @@
     tools:ignore="MergeRootFrame" >
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:baselineAligned="false"
 
-        android:baselineAligned="false" >
+        android:orientation="vertical">
+
 
         <LinearLayout
-            android:id="@id/layout"
-            android:orientation="horizontal"
-            android:layout_width='wrap_content'
-            android:layout_height="wrap_content">
-
-
-            <Button
-                android:id="@+id/first_button"
-                android:text="@string/start"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <Button
-                android:id="@+id/second_button"
-                android:text="@string/stop"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <Button
-                android:id="@+id/test_button"
-                android:text="@string/test"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <Button
-                android:id="@+id/scan_button"
-                android:text="@string/scan"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
+            android:layout_width="match_parent"
+            android:layout_height="395dp"
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="373dp"
+                android:layout_width="470dp"
                 android:layout_height="match_parent"
                 android:baselineAligned="false"
                 android:orientation="vertical">
 
+                <LinearLayout
+                    android:id="@id/layout"
+                    android:layout_width='wrap_content'
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+
+                    <Button
+                        android:id="@+id/first_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/start" />
+
+                    <Button
+                        android:id="@+id/second_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/stop" />
+
+                    <Button
+                        android:id="@+id/test_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/test" />
+
+                    <Button
+                        android:id="@+id/scan_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/scan" />
+
+                </LinearLayout>
+
                 <RelativeLayout
                     android:id="@+id/colors_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="122dp"
+                    android:layout_height="276dp"
                     android:layout_weight="1">
 
                     <ListView
@@ -133,14 +134,15 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="353dp"
-                android:layout_height="361dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:orientation="vertical">
 
                 <RelativeLayout
                     android:id="@+id/camera_layout_L"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:layout_weight="1">
 
                     <com.serenegiant.widget.UVCCameraTextureView
@@ -164,7 +166,8 @@
                 <RelativeLayout
                     android:id="@+id/camera_layout_side"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:layout_weight="1">
 
                     <com.serenegiant.widget.UVCCameraTextureView

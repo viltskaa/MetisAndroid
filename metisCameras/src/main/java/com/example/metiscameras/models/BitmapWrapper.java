@@ -35,6 +35,10 @@ public class BitmapWrapper {
         bitmap.copyPixelsFromBuffer(frame);
     }
 
+    public void updateBitmap(ByteBuffer frame){
+        bitmap.copyPixelsFromBuffer(frame);
+    }
+
     public Bitmap getBitmap() {
         return bitmap;
     }
@@ -42,10 +46,10 @@ public class BitmapWrapper {
     /**
      * Обрезка изображения с начальной точки (x, y) до заданной ширины (width) и высоты (height)
      *
-     * @param x
-     * @param y
-     * @param width
-     * @param height
+     * @param x координата начальной точки
+     * @param y координата начальной точки
+     * @param width ширина
+     * @param height высота
      */
     public void crop(int x, int y, int width, int height) {
         int maxWidth = bitmap.getWidth();
@@ -65,25 +69,28 @@ public class BitmapWrapper {
      * Обрезка изображения с начальной точки (x, y) до заданной ширины (width) и высоты (height).
      * Возвращает получившийся после обрезки Bitmap
      *
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     * @return
+     * @param x координата начальной точки
+     * @param y координата начальной точки
+     * @param width ширина
+     * @param height высота
+     * @return возвращает обрезанный новый Bitmap (текущий не меняет)
      */
     public Bitmap cropAndResult(int x, int y, int width, int height) {
         int maxWidth = bitmap.getWidth();
         int maxHeight = bitmap.getHeight();
 
-        // проверка координат
+        if (width < 0)
+            width = - width;
+        if (height < 0)
+            height = - height;
+
         if (x + width > maxWidth)
             width = maxWidth - x;
 
         if (y + height > maxHeight)
             height = maxHeight - y;
 
-        bitmap = Bitmap.createBitmap(bitmap, x, y, width, height);
-        return bitmap;
+        return Bitmap.createBitmap(bitmap, x, y, width, height);
     }
 
     // Заполнение изображения цветом с заданными значениями RGB

@@ -3,6 +3,7 @@ package com.example.metiscameras;
 
 import com.example.metiscameras.models.Image;
 import com.example.metiscameras.models.Images;
+import com.example.metiscameras.models.ResponseCV;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -15,6 +16,9 @@ public interface ApiService {
 
     @POST("processing_cv")
     Call<ResponseBody> processImage(@Body Image requestBody);
+
+    @POST("add_pattern")
+    Call<ResponseBody> addPattern(@Body Image requestBody);
 
     @POST("process_images")
     Call<ResponseBody> processImages(@Body Images requestBody);

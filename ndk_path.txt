@@ -1,0 +1,1 @@
+ndk.dir=F\:\\programs\\android_sdk\\ndk\\25.2.9519653

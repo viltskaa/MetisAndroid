@@ -43,4 +43,5 @@ public interface CameraViewInterface extends IScaledView {
 	public boolean hasSurface();
 	public void setVideoEncoder(final IVideoEncoder encoder);
 	public Bitmap captureStillImage();
+	public Bitmap mCaptureStillImage();
 }

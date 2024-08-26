@@ -180,6 +180,21 @@ public class UVCCameraTextureView extends AspectRatioTextureView    // API >= 14
 		}
 	}
 
+
+	/**
+	 * Одна из частей эксперимента
+	 *
+	 * @return
+	 */
+	@Override
+	public Bitmap mCaptureStillImage() {
+		synchronized (mCaptureSync) {
+			mReqesutCaptureStillImage = true;
+			return Bitmap.createBitmap(mTempBitmap);
+//			return mTempBitmap.copy(Bitmap.Config.RGB_565, true);
+		}
+	}
+
 	@Override
 	public SurfaceTexture getSurfaceTexture() {
 		return mRenderHandler != null ? mRenderHandler.getPreviewTexture() : null;

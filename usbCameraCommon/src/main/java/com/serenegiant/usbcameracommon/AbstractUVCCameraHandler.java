@@ -525,7 +525,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			} else {
 				mUVCCamera.setPreviewTexture((SurfaceTexture)surface);
 			}
-			this.mUVCCamera.setFrameCallback(this.mFrameCallback, 2);
+//			this.mUVCCamera.setFrameCallback(this.mFrameCallback, 2);
 			mUVCCamera.startPreview();
 			mUVCCamera.updateCameraParams();
 			synchronized (mSync) {
@@ -547,6 +547,24 @@ abstract class AbstractUVCCameraHandler extends Handler {
 				callOnStopPreview();
 			}
 			if (DEBUG) { Log.v(TAG_THREAD, "handleStopPreview:finished"); }
+		}
+
+
+		/**
+		 * Чистый эксперимент, пока не работает (не знаю для чего, но вдруг...)
+		 * @return
+		 */
+		public Bitmap mHandleCaptureStill() {
+			if (DEBUG) { Log.v(TAG_THREAD, "handleCaptureStill:"); }
+			final Activity parent = mWeakParent.get();
+			if (parent == null) return null;
+
+			try {
+				final Bitmap bitmap = mWeakCameraView.get().captureStillImage();
+			} catch (final Exception e) {
+				callOnError(e);
+			}
+			return null;
 		}
 
 		public void handleCaptureStill(final String path) {
@@ -605,7 +623,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 				muxer.prepare();
 				muxer.startRecording();
 				if (videoEncoder != null) {
-					mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
+					mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_RGB565);
 				}
 				synchronized (mSync) {
 					mMuxer = muxer;

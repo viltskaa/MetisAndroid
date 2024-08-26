@@ -7,12 +7,14 @@ import android.util.Base64;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import com.example.metiscameras.models.Image;
 import com.example.metiscameras.models.Images;
 import com.example.metiscameras.models.RGB;
+import com.example.metiscameras.models.ResponseCV;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,6 +35,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PythonApi {
     private static final String BASE_URL = "http://192.168.1.57:5000/v1/android/";
+    private static final boolean DEBUG = true;    // FIXME set false when production
 
     // Настраиваем OkHttpClient с тайм-аутами
     private static final OkHttpClient okHttpClient = new OkHttpClient.Builder()
@@ -72,7 +75,6 @@ public class PythonApi {
             }
         });
     }
-
 
     public static void processImage(Activity activity, Bitmap bitmap, ImageView imageView, Runnable callback) {
         Log.d(TAG, "processImage");
@@ -114,8 +116,6 @@ public class PythonApi {
                         });
 
 
-
-
                         Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
                         Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
 
@@ -139,7 +139,7 @@ public class PythonApi {
     }
 
     public static void processImages(Activity activity, Bitmap mainBitmap, Bitmap sideBitmap, ImageView imageView, Runnable callback) {
-        Log.d(TAG, "processImageS");
+        if (DEBUG) Log.d(TAG, "processImageS");
 
         Call<ResponseBody> call = apiService.processImages(new Images(toBase64String(mainBitmap), toBase64String(sideBitmap)));
 
@@ -147,10 +147,11 @@ public class PythonApi {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    if (DEBUG) Toast.makeText(activity, "response code " + response.code(), Toast.LENGTH_SHORT).show();
                     try {
                         String responseBody = response.body().string();
 //                        Log.d(TAG, "Response: " + responseBody);
-                        Log.d(TAG, "Response isSuccessful");
+                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
 
                         JSONObject jsonResponse = new JSONObject(responseBody);
 
@@ -176,8 +177,8 @@ public class PythonApi {
                             colors.setAdapter(adapter);
                         });
 
-                        Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
-                        Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
+                        if (DEBUG)Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
+                        if (DEBUG)Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
 
                         if(callback != null)
                             callback.run();
@@ -186,14 +187,90 @@ public class PythonApi {
                         e.printStackTrace();
                     }
                 } else {
-                    Log.e(TAG, "Failed to process image. Response code: " + response.code());
+                    Log.w(TAG, "Failed to process image. Response code: " + response.code());
+                    if(callback != null)
+                        callback.run();
+
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.e(TAG, "onFailure: " + t.getMessage());
-//                t.printStackTrace();
+                Log.w(TAG, "onFailure: " + t.getMessage());
+                if(callback != null)
+                    callback.run();
+
+                t.printStackTrace();
+            }
+        });
+    }
+
+    public static void addPattern(Activity activity, Bitmap bitmap, Runnable callback) {
+        if (DEBUG) Log.d(TAG, "addPattern");
+
+        Call<ResponseBody> call = apiService.addPattern(new Image(toBase64String(bitmap)));
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (DEBUG) Toast.makeText(activity, "response code " + response.code(), Toast.LENGTH_SHORT).show();
+                    try {
+                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
+                        if (DEBUG) Log.d(TAG, response.body().string());
+
+
+//                        String responseBody = response.body().string();
+////                        Log.d(TAG, "Response: " + responseBody);
+//
+//                        JSONObject jsonResponse = new JSONObject(responseBody);
+//
+//                        Bitmap processedBitmap = toBitmap(jsonResponse.getString("imgBase64"));
+//
+//                        activity.runOnUiThread(() -> {
+//                            imageView.setImageBitmap(processedBitmap);
+//                            ListView colors = (ListView) activity.findViewById(R.id.colors);
+//
+//                            List<RGB> rgb = new ArrayList<>();
+//
+//                            try {
+//                                JSONArray respColors = jsonResponse.getJSONArray("colors");
+//                                for(int i = 0; i < respColors.length(); i++){
+//                                    rgb.add(new RGB(respColors.getJSONArray(i)));
+//                                }
+//
+//                            } catch (JSONException e) {
+//                                throw new RuntimeException(e);
+//                            }
+//
+//                            ColorsAdapter adapter = new ColorsAdapter(activity, R.id.colors, rgb);
+//                            colors.setAdapter(adapter);
+//                        });
+//
+//                        if (DEBUG)Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
+//                        if (DEBUG)Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
+//
+//                        if(callback != null)
+//                            callback.run();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.w(TAG, "Failed to process image. Response code: " + response.code());
+                    if(callback != null)
+                        callback.run();
+
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.w(TAG, "onFailure: " + t.getMessage());
+                if(callback != null)
+                    callback.run();
+
+                t.printStackTrace();
             }
         });
     }
