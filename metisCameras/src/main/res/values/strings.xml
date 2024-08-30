@@ -9,4 +9,15 @@
     <string name="test" translatable="false">test send</string>
 
     <string name="rgb" translatable="false">RGB:</string>
+
+    <string name="pattern_label" translatable="false">Pattern Label</string>
+
+    <string name="article" translatable="false">Article</string>
+    <string name="article_hint" translatable="false">Введите артикул</string>
+
+    <string name="name" translatable="false">Name</string>
+    <string name="name_hint" translatable="false">Введите название</string>
+
+    <string name="material" translatable="false">Material</string>
+    <string name="material_hint" translatable="false">Введите материал</string>
 </resources>

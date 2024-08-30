@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 
 import com.example.metiscameras.models.Image;
 import com.example.metiscameras.models.Images;
+import com.example.metiscameras.models.PatternResponse;
 import com.example.metiscameras.models.RGB;
 import com.example.metiscameras.models.ResponseCV;
 
@@ -103,7 +104,7 @@ public class PythonApi {
 
                             try {
                                 JSONArray respColors = jsonResponse.getJSONArray("colors");
-                                for(int i = 0; i < respColors.length(); i++){
+                                for (int i = 0; i < respColors.length(); i++) {
                                     rgb.add(new RGB(respColors.getJSONArray(i)));
                                 }
 
@@ -119,7 +120,7 @@ public class PythonApi {
                         Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
                         Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.run();
 
                     } catch (Exception e) {
@@ -147,7 +148,8 @@ public class PythonApi {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    if (DEBUG) Toast.makeText(activity, "response code " + response.code(), Toast.LENGTH_SHORT).show();
+                    if (DEBUG)
+                        Toast.makeText(activity, "response code " + response.code(), Toast.LENGTH_SHORT).show();
                     try {
                         String responseBody = response.body().string();
 //                        Log.d(TAG, "Response: " + responseBody);
@@ -165,7 +167,7 @@ public class PythonApi {
 
                             try {
                                 JSONArray respColors = jsonResponse.getJSONArray("colors");
-                                for(int i = 0; i < respColors.length(); i++){
+                                for (int i = 0; i < respColors.length(); i++) {
                                     rgb.add(new RGB(respColors.getJSONArray(i)));
                                 }
 
@@ -177,10 +179,10 @@ public class PythonApi {
                             colors.setAdapter(adapter);
                         });
 
-                        if (DEBUG)Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
-                        if (DEBUG)Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
+                        if (DEBUG) Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
+                        if (DEBUG) Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.run();
 
                     } catch (Exception e) {
@@ -188,7 +190,7 @@ public class PythonApi {
                     }
                 } else {
                     Log.w(TAG, "Failed to process image. Response code: " + response.code());
-                    if(callback != null)
+                    if (callback != null)
                         callback.run();
 
                 }
@@ -197,7 +199,7 @@ public class PythonApi {
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
                 Log.w(TAG, "onFailure: " + t.getMessage());
-                if(callback != null)
+                if (callback != null)
                     callback.run();
 
                 t.printStackTrace();
@@ -208,16 +210,15 @@ public class PythonApi {
     public static void addPattern(Activity activity, Bitmap bitmap, Runnable callback) {
         if (DEBUG) Log.d(TAG, "addPattern");
 
-        Call<ResponseBody> call = apiService.addPattern(new Image(toBase64String(bitmap)));
+        Call<PatternResponse> call = apiService.addPattern(new Image(toBase64String(bitmap)));
 
-        call.enqueue(new Callback<ResponseBody>() {
+        call.enqueue(new Callback<PatternResponse>() {
             @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+            public void onResponse(@NonNull Call<PatternResponse> call, @NonNull Response<PatternResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    if (DEBUG) Toast.makeText(activity, "response code " + response.code(), Toast.LENGTH_SHORT).show();
                     try {
                         if (DEBUG) Log.d(TAG, "Response isSuccessful");
-                        if (DEBUG) Log.d(TAG, response.body().string());
+                        if (DEBUG) Log.d(TAG, response.body().toString());
 
 
 //                        String responseBody = response.body().string();
@@ -258,16 +259,16 @@ public class PythonApi {
                     }
                 } else {
                     Log.w(TAG, "Failed to process image. Response code: " + response.code());
-                    if(callback != null)
+                    if (callback != null)
                         callback.run();
 
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<PatternResponse> call, @NonNull Throwable t) {
                 Log.w(TAG, "onFailure: " + t.getMessage());
-                if(callback != null)
+                if (callback != null)
                     callback.run();
 
                 t.printStackTrace();
@@ -275,14 +276,14 @@ public class PythonApi {
         });
     }
 
-    private static String toBase64String(Bitmap bitmap){
+    private static String toBase64String(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
         byte[] imageBytes = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(imageBytes, Base64.DEFAULT);
     }
 
-    private static Bitmap toBitmap(String image){
+    private static Bitmap toBitmap(String image) {
         byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
     }
