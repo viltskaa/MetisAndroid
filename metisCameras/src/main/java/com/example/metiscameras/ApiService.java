@@ -23,4 +23,8 @@ public interface ApiService {
 
     @POST("process_images")
     Call<ResponseBody> processImages(@Body Images requestBody);
+
+    @POST("find_pattern")
+    Call<FindPatternResponse> findPattern(@Body Images requestBody);
+
 }
