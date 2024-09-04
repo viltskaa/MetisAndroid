@@ -20,4 +20,6 @@
 
     <string name="material" translatable="false">Material</string>
     <string name="material_hint" translatable="false">Введите материал</string>
+
+    <string name="button_go_back" translatable="false">Подтвердить</string>
 </resources>

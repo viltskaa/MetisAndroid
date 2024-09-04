@@ -1,6 +1,7 @@
 package com.example.metiscameras;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
@@ -11,11 +12,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.metiscameras.models.Image;
-import com.example.metiscameras.models.Images;
-import com.example.metiscameras.models.PatternResponse;
+import com.example.metiscameras.models.bodies.Image;
+import com.example.metiscameras.models.bodies.Images;
+import com.example.metiscameras.models.responses.FindPatternResponse;
+import com.example.metiscameras.models.responses.PatternResponse;
 import com.example.metiscameras.models.RGB;
-import com.example.metiscameras.models.ResponseCV;
+import com.example.metiscameras.models.responses.UpdatePatternBody;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,10 +39,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PythonApi {
     private static final String BASE_URL = "http://192.168.1.57:5000/v1/android/";
+    private static final String TABLE_TOP_PATTERN_URL = "http://192.168.1.57:5000/v1/table_top_pattern/";
+
     private static final boolean DEBUG = true;    // FIXME set false when production
 
-    // Настраиваем OkHttpClient с тайм-аутами
     private static final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            .connectTimeout(120, TimeUnit.SECONDS) // Время ожидания соединения
+            .writeTimeout(120, TimeUnit.SECONDS)   // Время ожидания записи
+            .readTimeout(120, TimeUnit.SECONDS)    // Время ожидания чтения
+            .build();
+
+    private static final OkHttpClient okHttpClientTableTopPattern = new OkHttpClient.Builder()
             .connectTimeout(120, TimeUnit.SECONDS) // Время ожидания соединения
             .writeTimeout(120, TimeUnit.SECONDS)   // Время ожидания записи
             .readTimeout(120, TimeUnit.SECONDS)    // Время ожидания чтения
@@ -51,9 +61,88 @@ public class PythonApi {
             .addConverterFactory(GsonConverterFactory.create())
             .build();
 
+    private static final Retrofit retrofitTableTopPattern = new Retrofit.Builder()
+            .baseUrl(TABLE_TOP_PATTERN_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
+
     private static final ApiService apiService = retrofit.create(ApiService.class);
 
+    private static final ApiService apiServiceForTableTopPattern = retrofitTableTopPattern.create(ApiService.class);
+
     private static final String TAG = "!";
+
+    public static void updatePattern(UpdatePatternBody body) {
+        if (DEBUG) Log.d(TAG, "updatePattern");
+
+        Call<ResponseBody> call = apiServiceForTableTopPattern.updatePattern(body);
+
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
+                        if (DEBUG) Log.d(TAG, response.body().toString());
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.w(TAG, "Failed to process image. Response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.w(TAG, "onFailure: " + t.getMessage());
+
+                t.printStackTrace();
+            }
+        });
+    }
+
+
+    public static void findPattern() {
+        if (DEBUG) Log.d(TAG, "addPattern");
+
+        Call<FindPatternResponse> call = apiService.test(new Image("glrejglksjglkdfjg"));
+
+        call.enqueue(new Callback<FindPatternResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<FindPatternResponse> call, @NonNull Response<FindPatternResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
+                        if (DEBUG) Log.d(TAG, response.body().toString());
+
+                        FindPatternResponse resp = response.body();
+
+
+//                        Intent intent = new Intent(activity, PatternActivity.class);
+//                        intent.putExtra(PatternResponse.class.getSimpleName(), resp);
+//
+//                        activity.startActivity(intent);
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.w(TAG, "Failed to process image. Response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<FindPatternResponse> call, @NonNull Throwable t) {
+                Log.w(TAG, "onFailure: " + t.getMessage());
+
+                t.printStackTrace();
+            }
+        });
+    }
 
     public static void sendImageToServer(String scannedString) {
         Image image = new Image(scannedString);
@@ -192,7 +281,6 @@ public class PythonApi {
                     Log.w(TAG, "Failed to process image. Response code: " + response.code());
                     if (callback != null)
                         callback.run();
-
                 }
             }
 
@@ -207,74 +295,7 @@ public class PythonApi {
         });
     }
 
-    public static void addPattern(Activity activity, Bitmap bitmap, Runnable callback) {
-        if (DEBUG) Log.d(TAG, "addPattern");
 
-        Call<PatternResponse> call = apiService.addPattern(new Image(toBase64String(bitmap)));
-
-        call.enqueue(new Callback<PatternResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<PatternResponse> call, @NonNull Response<PatternResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
-                        if (DEBUG) Log.d(TAG, response.body().toString());
-
-
-//                        String responseBody = response.body().string();
-////                        Log.d(TAG, "Response: " + responseBody);
-//
-//                        JSONObject jsonResponse = new JSONObject(responseBody);
-//
-//                        Bitmap processedBitmap = toBitmap(jsonResponse.getString("imgBase64"));
-//
-//                        activity.runOnUiThread(() -> {
-//                            imageView.setImageBitmap(processedBitmap);
-//                            ListView colors = (ListView) activity.findViewById(R.id.colors);
-//
-//                            List<RGB> rgb = new ArrayList<>();
-//
-//                            try {
-//                                JSONArray respColors = jsonResponse.getJSONArray("colors");
-//                                for(int i = 0; i < respColors.length(); i++){
-//                                    rgb.add(new RGB(respColors.getJSONArray(i)));
-//                                }
-//
-//                            } catch (JSONException e) {
-//                                throw new RuntimeException(e);
-//                            }
-//
-//                            ColorsAdapter adapter = new ColorsAdapter(activity, R.id.colors, rgb);
-//                            colors.setAdapter(adapter);
-//                        });
-//
-//                        if (DEBUG)Log.d(TAG, jsonResponse.getJSONArray("contours").toString());
-//                        if (DEBUG)Log.d(TAG, String.valueOf(jsonResponse.getJSONArray("colors")));
-//
-//                        if(callback != null)
-//                            callback.run();
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.w(TAG, "Failed to process image. Response code: " + response.code());
-                    if (callback != null)
-                        callback.run();
-
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<PatternResponse> call, @NonNull Throwable t) {
-                Log.w(TAG, "onFailure: " + t.getMessage());
-                if (callback != null)
-                    callback.run();
-
-                t.printStackTrace();
-            }
-        });
-    }
 
     private static String toBase64String(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

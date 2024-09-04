@@ -1,8 +1,6 @@
-package com.example.metiscameras.models;
+package com.example.metiscameras.models.responses;
 
 import androidx.annotation.NonNull;
-
-import com.google.gson.annotations.SerializedName;
 
 import org.json.JSONArray;
 

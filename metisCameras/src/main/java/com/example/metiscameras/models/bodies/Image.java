@@ -1,4 +1,4 @@
-package com.example.metiscameras.models;
+package com.example.metiscameras.models.bodies;
 
 import com.google.gson.annotations.SerializedName;
 

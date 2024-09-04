@@ -17,7 +17,6 @@ import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb_libuvccamera.CameraDialog;
 import com.serenegiant.usb_libuvccamera.IFrameCallback;
 import com.serenegiant.usb_libuvccamera.LibUVCCameraUSBMonitor;
-import com.serenegiant.usb_libuvccamera.UVCCamera;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.usb_libuvccamera.LibUVCCameraUSBMonitor.UsbControlBlock;
 import com.serenegiant.usb_libuvccamera.LibUVCCameraUSBMonitor.OnDeviceConnectListener;
@@ -78,27 +77,16 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
         Button scan = (Button) findViewById(R.id.scan_button);
         scan.setOnClickListener(view -> {
-            pattern = true;
-            mainHandler.setPreviewCallback(mainFrameCallback);
+            PythonApi.findPattern();
+//            pattern = true;
+//            mainHandler.setPreviewCallback(mainFrameCallback);
         });
 
         Button open = (Button) findViewById(R.id.first_button);
         open.setOnClickListener(view -> {
             if (DEBUG) Log.d(TAG, "open");
-            try {
-                mainCamera = usbMonitor.getDeviceList().get(0);
-                sideCamera = usbMonitor.getDeviceList().get(1);
-
-                queueEvent(() -> usbMonitor.requestPermission(mainCamera), 0);
-
-                queueEvent(() -> usbMonitor.requestPermission(sideCamera), 3 * 1000);
-
-            } catch (Exception ex) {
-                Toast.makeText(MainActivity.this, "Камеры не подключены, или подключена только одна", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "EXCEPTION while opening! " + ex.getMessage());
-            }
+            openCameras();
         });
-
 
         Button test = (Button) findViewById(R.id.test_button);
         test.setOnClickListener(view -> {
@@ -174,6 +162,27 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         super.onDestroy();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        openCameras();
+    }
+
+    private void openCameras(){
+        try {
+            mainCamera = usbMonitor.getDeviceList().get(0);
+            sideCamera = usbMonitor.getDeviceList().get(1);
+
+            queueEvent(() -> usbMonitor.requestPermission(mainCamera), 0);
+
+            queueEvent(() -> usbMonitor.requestPermission(sideCamera), 3 * 1000);
+
+        } catch (Exception ex) {
+            Toast.makeText(MainActivity.this, "Камеры не подключены, или подключена только одна", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "EXCEPTION while opening! " + ex.getMessage());
+        }
+    }
+
     private final OnDeviceConnectListener mOnDeviceConnectListener = new OnDeviceConnectListener() {
         @Override
         public void onAttach(final UsbDevice device) {
@@ -208,12 +217,14 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         @Override
         public void onDisconnect(final UsbDevice device, final UsbControlBlock ctrlBlock) {
             if (DEBUG) Log.i(TAG, "onDisconnect:" + device.getDeviceId());
-            if ((sideHandler != null) && !sideHandler.isEqual(device)) {
+//            if ((sideHandler != null) && !sideHandler.isEqual(device)) {
+            if (sideCamera.getDeviceId() == device.getDeviceId()) {
                 queueEvent(new Runnable() {
                     @Override
                     public void run() {
                         sideCamera = null;
-                        sideHandler.close();
+                        if(sideHandler != null)
+                            sideHandler.close();
                         sideView.onPause();
                         if (sideSurface != null) {
                             sideSurface.release();
@@ -221,12 +232,15 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                         }
                     }
                 }, 0);
-            } else if ((mainHandler != null) && !mainHandler.isEqual(device)) {
+            }
+//            else if ((mainHandler != null) && !mainHandler.isEqual(device)) {
+            else if (mainCamera.getDeviceId() == device.getDeviceId()) {
                 queueEvent(new Runnable() {
                     @Override
                     public void run() {
                         mainCamera = null;
-                        mainHandler.close();
+                        if(mainHandler != null)
+                            mainHandler.close();
                         mainView.onPause();
                         if (mainSurface != null) {
                             mainSurface.release();
@@ -272,7 +286,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             else
                 mainBitmap.updateBitmap(frame);
 
-            if(pattern){
+            if (pattern) {
                 addPattern();
                 return;
             }
@@ -284,8 +298,8 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         }
     };
 
-    private void addPattern(){
-        PythonApi.addPattern(this, mainBitmap.getBitmap(), null);
+    private void addPattern() {
+//        PythonApi.checkPattern(this, mainBitmap.getBitmap());
 
     }
 
@@ -302,7 +316,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 sideBitmap.updateBitmap(frame);
 
             sideSaved = true;
-            sideImage.post(() -> sideImage.setImageBitmap(sideBitmap.cropAndResult(0, 0, 500,500)));
+            sideImage.post(() -> sideImage.setImageBitmap(sideBitmap.cropAndResult(0, 0, 500, 500)));
 
             checkBitmaps();
         }
@@ -320,7 +334,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         PythonApi.processImages(
                 this,
                 mainBitmap.getBitmap(),
-                sideBitmap.cropAndResult(0, 0, 100,100),
+                sideBitmap.cropAndResult(0, 0, 100, 100),
                 mainImage,
                 () -> {
                     Log.d(TAG, "CallBAck");
