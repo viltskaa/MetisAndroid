@@ -60,18 +60,29 @@
 
                 </LinearLayout>
 
-                <RelativeLayout
-                    android:id="@+id/colors_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="276dp"
-                    android:layout_weight="1">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-                    <ListView
-                        android:id="@+id/colors"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <RelativeLayout
+                        android:id="@+id/colors_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="276dp"
+                        android:layout_weight="1">
 
-                </RelativeLayout>
+                        <ListView
+                            android:id="@+id/colors"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </RelativeLayout>
+
+                    <include layout="@layout/pattern_information" />
+
+                </LinearLayout>
+
+
 
                 <LinearLayout
                     android:layout_width="match_parent"

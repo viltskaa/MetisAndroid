@@ -38,7 +38,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PythonApi {
-    private static final String BASE_URL = "http://192.168.1.57:5000/v1/android/";
+    private static final String BASE_URL = "http://192.168.61.208:5000/v1/android/";
     private static final String TABLE_TOP_PATTERN_URL = "http://192.168.1.57:5000/v1/table_top_pattern/";
 
     private static final boolean DEBUG = true;    // FIXME set false when production
@@ -73,52 +73,28 @@ public class PythonApi {
 
     private static final String TAG = "!";
 
-    public static void updatePattern(UpdatePatternBody body) {
-        if (DEBUG) Log.d(TAG, "updatePattern");
-
-        Call<ResponseBody> call = apiServiceForTableTopPattern.updatePattern(body);
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
-                        if (DEBUG) Log.d(TAG, response.body().toString());
-
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.w(TAG, "Failed to process image. Response code: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.w(TAG, "onFailure: " + t.getMessage());
-
-                t.printStackTrace();
-            }
-        });
-    }
-
-
-    public static void findPattern() {
-        if (DEBUG) Log.d(TAG, "addPattern");
+    public static void findPattern(Activity activity) {
+        if (DEBUG) Log.d(TAG, "findPattern");
 
         Call<FindPatternResponse> call = apiService.test(new Image("glrejglksjglkdfjg"));
 
-        call.enqueue(new Callback<FindPatternResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<FindPatternResponse> call, @NonNull Response<FindPatternResponse> response) {
+                if (DEBUG) Log.d(TAG, "Response code " + response.code());
+
+                FindPatternResponse resp = response.body();
+
+                if(resp == null) {
+                    if (DEBUG) Log.d(TAG, "resp == null");
+                    return;
+                }
+
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        if (DEBUG) Log.d(TAG, "Response isSuccessful");
+                        if (DEBUG) Log.i(TAG, "Message: " + resp.getMessage());
                         if (DEBUG) Log.d(TAG, response.body().toString());
 
-                        FindPatternResponse resp = response.body();
 
 
 //                        Intent intent = new Intent(activity, PatternActivity.class);
@@ -130,7 +106,13 @@ public class PythonApi {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                } else {
+                }
+                else if(response.code() == 400){
+                    if (DEBUG) Log.i(TAG, "Message: " + resp.getMessage());
+                    Toast.makeText(activity, "Паттерн не был найден", Toast.LENGTH_SHORT).show();
+                    PythonApi.findPattern(activity);
+                }
+                else {
                     Log.w(TAG, "Failed to process image. Response code: " + response.code());
                 }
             }

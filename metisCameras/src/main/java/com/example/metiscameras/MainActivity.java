@@ -77,7 +77,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
         Button scan = (Button) findViewById(R.id.scan_button);
         scan.setOnClickListener(view -> {
-            PythonApi.findPattern();
+            PythonApi.findPattern(this);
 //            pattern = true;
 //            mainHandler.setPreviewCallback(mainFrameCallback);
         });

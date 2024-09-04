@@ -4,13 +4,7 @@ import androidx.annotation.NonNull;
 
 import java.io.Serializable;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-@AllArgsConstructor
 public class PatternResponse implements Serializable {
     private boolean isNew;
 

@@ -121,6 +121,8 @@ proguard/
 
 # NDK
 obj/
+/libuvccamera/src/main/obj/**/*.so
+*.so
 
 # IntelliJ IDEA
 *.iws
