@@ -1,13 +1,13 @@
-package com.example.metiscameras;
+package com.example.metiscameras.activities;
 
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.metiscameras.models.responses.PatternResponse;
+import com.example.metiscameras.R;
+import com.example.metiscameras.api.responses.PatternResponse;
 
 public class PatternActivity extends AppCompatActivity {
 

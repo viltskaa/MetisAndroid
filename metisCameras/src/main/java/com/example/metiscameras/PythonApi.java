@@ -1,7 +1,9 @@
 package com.example.metiscameras;
 
+import static com.example.metiscameras.api.Utils.toBase64String;
+import static com.example.metiscameras.api.Utils.toBitmap;
+
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
@@ -12,19 +14,17 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.metiscameras.models.bodies.Image;
-import com.example.metiscameras.models.bodies.Images;
-import com.example.metiscameras.models.responses.FindPatternResponse;
-import com.example.metiscameras.models.responses.PatternResponse;
+import com.example.metiscameras.api.bodies.Image;
+import com.example.metiscameras.api.bodies.Images;
+import com.example.metiscameras.api.responses.FindPatternResponse;
+import com.example.metiscameras.models.ColorsAdapter;
 import com.example.metiscameras.models.RGB;
-import com.example.metiscameras.models.responses.UpdatePatternBody;
 
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -73,8 +73,8 @@ public class PythonApi {
 
     private static final String TAG = "!";
 
-    public static void findPattern(Activity activity) {
-        if (DEBUG) Log.d(TAG, "findPattern");
+    public static void test(Activity activity) {
+        if (DEBUG) Log.d(TAG, "test");
 
         Call<FindPatternResponse> call = apiService.test(new Image("glrejglksjglkdfjg"));
 
@@ -95,12 +95,7 @@ public class PythonApi {
                         if (DEBUG) Log.i(TAG, "Message: " + resp.getMessage());
                         if (DEBUG) Log.d(TAG, response.body().toString());
 
-
-
-//                        Intent intent = new Intent(activity, PatternActivity.class);
-//                        intent.putExtra(PatternResponse.class.getSimpleName(), resp);
-//
-//                        activity.startActivity(intent);
+                        if (DEBUG) Log.d(TAG, resp.getColors().toString());
 
 
                     } catch (Exception e) {
@@ -110,7 +105,7 @@ public class PythonApi {
                 else if(response.code() == 400){
                     if (DEBUG) Log.i(TAG, "Message: " + resp.getMessage());
                     Toast.makeText(activity, "Паттерн не был найден", Toast.LENGTH_SHORT).show();
-                    PythonApi.findPattern(activity);
+                    PythonApi.test(activity);
                 }
                 else {
                     Log.w(TAG, "Failed to process image. Response code: " + response.code());
@@ -275,19 +270,5 @@ public class PythonApi {
                 t.printStackTrace();
             }
         });
-    }
-
-
-
-    private static String toBase64String(Bitmap bitmap) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-        byte[] imageBytes = byteArrayOutputStream.toByteArray();
-        return Base64.encodeToString(imageBytes, Base64.DEFAULT);
-    }
-
-    private static Bitmap toBitmap(String image) {
-        byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
     }
 }

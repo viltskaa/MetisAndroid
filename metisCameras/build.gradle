@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.application'
+    id 'io.franzbecker.gradle-lombok' version '5.0.0'
+//    id 'java'
 }
 
 android {
@@ -30,6 +32,11 @@ android {
     ndkVersion ndkVersion
     compileOptions {
     }
+
+    lombok { // optional: values below are the defaults
+        version = "1.18.34"
+        sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
+    }
 }
 
 dependencies {
@@ -50,7 +57,8 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.11.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
 
-
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'

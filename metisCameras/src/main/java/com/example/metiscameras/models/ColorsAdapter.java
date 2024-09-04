@@ -1,4 +1,4 @@
-package com.example.metiscameras;
+package com.example.metiscameras.models;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,8 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 
-import com.example.metiscameras.models.BitmapWrapper;
-import com.example.metiscameras.models.RGB;
+import com.example.metiscameras.R;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.example.metiscameras;
+package com.example.metiscameras.activities;
 
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
@@ -6,12 +6,17 @@ import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.metiscameras.PythonApi;
+import com.example.metiscameras.R;
+import com.example.metiscameras.api.TableTopApi;
+import com.example.metiscameras.api.responses.FindPatternResponse;
 import com.example.metiscameras.models.BitmapWrapper;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb_libuvccamera.CameraDialog;
@@ -25,6 +30,9 @@ import com.serenegiant.widget.CameraViewInterface;
 import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
     private static final boolean DEBUG = true;    // FIXME set false when production
@@ -62,8 +70,11 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private ImageView sideImage;
     private UsbDevice sideCamera;
 
-    private boolean pattern = false;
+    private boolean isFindPattern = false;
 
+    @Setter
+    @Getter
+    private FindPatternResponse pattern;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -75,9 +86,15 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
+        Button confirmPattern = (Button) findViewById(R.id.confirm_pattern_button);
+        confirmPattern.setVisibility(View.INVISIBLE);
+        confirmPattern.setOnClickListener(view -> {
+            TableTopApi.addTableTop(pattern);
+        });
+
         Button scan = (Button) findViewById(R.id.scan_button);
         scan.setOnClickListener(view -> {
-            PythonApi.findPattern(this);
+            PythonApi.test(this);
 //            pattern = true;
 //            mainHandler.setPreviewCallback(mainFrameCallback);
         });
@@ -286,7 +303,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             else
                 mainBitmap.updateBitmap(frame);
 
-            if (pattern) {
+            if (isFindPattern) {
                 addPattern();
                 return;
             }
@@ -365,4 +382,5 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     @Override
     public void onDialogResult(boolean canceled) {
     }
+
 }

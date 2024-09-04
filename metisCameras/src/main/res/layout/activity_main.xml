@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#ff000000"
-    tools:context=".MainActivity"
+    tools:context=".activities.MainActivity"
     tools:ignore="MergeRootFrame" >
 
     <LinearLayout
@@ -22,7 +22,7 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="470dp"
+                android:layout_width="511dp"
                 android:layout_height="match_parent"
                 android:baselineAligned="false"
                 android:orientation="vertical">
@@ -62,13 +62,13 @@
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="247dp"
                     android:orientation="horizontal">
 
                     <RelativeLayout
                         android:id="@+id/colors_layout"
                         android:layout_width="match_parent"
-                        android:layout_height="276dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1">
 
                         <ListView
@@ -81,7 +81,6 @@
                     <include layout="@layout/pattern_information" />
 
                 </LinearLayout>
-
 
 
                 <LinearLayout

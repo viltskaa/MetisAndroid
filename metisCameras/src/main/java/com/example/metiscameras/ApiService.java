@@ -1,11 +1,10 @@
 package com.example.metiscameras;
 
 
-import com.example.metiscameras.models.bodies.Image;
-import com.example.metiscameras.models.bodies.Images;
-import com.example.metiscameras.models.responses.FindPatternResponse;
-import com.example.metiscameras.models.responses.PatternResponse;
-import com.example.metiscameras.models.responses.UpdatePatternBody;
+import com.example.metiscameras.api.bodies.Image;
+import com.example.metiscameras.api.bodies.Images;
+import com.example.metiscameras.api.responses.FindPatternResponse;
+import com.example.metiscameras.api.responses.PatternResponse;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -25,8 +24,6 @@ public interface ApiService {
     @POST("process_images")
     Call<ResponseBody> processImages(@Body Images requestBody);
 
-    @POST("update")
-    Call<ResponseBody> updatePattern(@Body UpdatePatternBody requestBody);
 
     @POST("find_pattern")
     Call<FindPatternResponse> findPattern(@Body Images requestBody);
