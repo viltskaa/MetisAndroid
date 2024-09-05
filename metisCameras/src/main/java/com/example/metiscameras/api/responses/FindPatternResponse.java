@@ -1,5 +1,7 @@
 package com.example.metiscameras.api.responses;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -48,8 +50,14 @@ public class FindPatternResponse {
     @SerializedName("height")
     private Float tableTopHeight;
 
-    private List<List<Integer>> colors;
+    private List<String> colors;
 
     @SerializedName("image_base64")
     private String tableTopImage;
+
+    @NonNull
+    @Override
+    public String toString() {
+        return article + " - " + name + " - " + material;
+    }
 }

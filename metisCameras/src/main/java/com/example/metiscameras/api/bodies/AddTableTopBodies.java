@@ -1,5 +1,6 @@
 package com.example.metiscameras.api.bodies;
 
+import com.example.metiscameras.api.responses.FindPatternResponse;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -18,5 +19,14 @@ public class AddTableTopBodies {
     private Float height;
     @SerializedName("image_base64")
     private String image;
-    private List<List<Integer>> colors;
+    private List<String> colors;
+
+    public AddTableTopBodies(FindPatternResponse pattern) {
+        id = pattern.getId();
+        perimeter = pattern.getPerimeter();
+        width = pattern.getWidth();
+        height = pattern.getHeight();
+        image = pattern.getImage();
+        colors = pattern.getColors();
+    }
 }

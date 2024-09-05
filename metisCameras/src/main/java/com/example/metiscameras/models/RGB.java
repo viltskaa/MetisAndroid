@@ -1,46 +1,33 @@
 package com.example.metiscameras.models;
 
+import android.graphics.Color;
+
 import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public class RGB {
     private int red;
     private int green;
     private int blue;
+    private int color;
 
-    public RGB(int red, int green, int blue) {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-    }
-
-    public RGB(JSONArray colors) {
-        try {
-            this.red = colors.getInt(0);
-            this.green = colors.getInt(1);
-            this.blue = colors.getInt(2);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+    public RGB(String hex) {
+        color = Color.parseColor(hex);
+        red = Color.red(color);
+        green = Color.green(color);
+        blue = Color.blue(color);
     }
 
     @NonNull
     @Override
     public String toString() {
         return "[" + red + " " +  green + " " + blue + "]";
-    }
-
-    public int getRed() {
-        return red;
-    }
-
-    public int getGreen() {
-        return green;
-    }
-
-    public int getBlue() {
-        return blue;
     }
 }

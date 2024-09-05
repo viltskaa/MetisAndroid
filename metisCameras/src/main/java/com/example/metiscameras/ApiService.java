@@ -4,6 +4,7 @@ package com.example.metiscameras;
 import com.example.metiscameras.api.bodies.Image;
 import com.example.metiscameras.api.bodies.Images;
 import com.example.metiscameras.api.responses.FindPatternResponse;
+import com.example.metiscameras.api.responses.OnlyMsgResponse;
 import com.example.metiscameras.api.responses.PatternResponse;
 
 import okhttp3.ResponseBody;
@@ -23,12 +24,5 @@ public interface ApiService {
 
     @POST("process_images")
     Call<ResponseBody> processImages(@Body Images requestBody);
-
-
-    @POST("find_pattern")
-    Call<FindPatternResponse> findPattern(@Body Images requestBody);
-
-    @POST("test")
-    Call<FindPatternResponse> test(@Body Image requestBody);
 
 }

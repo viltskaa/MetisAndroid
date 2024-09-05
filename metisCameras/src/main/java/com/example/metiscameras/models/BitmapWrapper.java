@@ -106,14 +106,13 @@ public class BitmapWrapper {
         bitmap = coloredBitmap;
     }
 
-    public void fillWithColor(RGB colors) {
+    public void fillWithColor(int color) {
         // Преобразуем значения RGB в цвет
-        int color = Color.rgb(colors.getRed(), colors.getGreen(), colors.getBlue());
+//        int color = Color.rgb(colors.getRed(), colors.getGreen(), colors.getBlue());
 
         // Создаем новый Bitmap и заполняем его этим цветом
         Bitmap coloredBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
-        Canvas canvas = new Canvas(coloredBitmap);
-        canvas.drawColor(color);
+        coloredBitmap.eraseColor(color);
 
         bitmap = coloredBitmap;
     }

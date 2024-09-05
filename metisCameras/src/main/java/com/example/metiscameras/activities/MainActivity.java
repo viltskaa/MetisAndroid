@@ -1,9 +1,14 @@
 package com.example.metiscameras.activities;
 
+import static com.example.metiscameras.api.Utils.toBitmap;
+
+import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -11,13 +16,17 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.metiscameras.PythonApi;
 import com.example.metiscameras.R;
+import com.example.metiscameras.api.TableTopPatternApi;
 import com.example.metiscameras.api.TableTopApi;
 import com.example.metiscameras.api.responses.FindPatternResponse;
 import com.example.metiscameras.models.BitmapWrapper;
+import com.example.metiscameras.models.ColorsAdapter;
+import com.example.metiscameras.models.RGB;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb_libuvccamera.CameraDialog;
 import com.serenegiant.usb_libuvccamera.IFrameCallback;
@@ -27,34 +36,20 @@ import com.serenegiant.usb_libuvccamera.LibUVCCameraUSBMonitor.UsbControlBlock;
 import com.serenegiant.usb_libuvccamera.LibUVCCameraUSBMonitor.OnDeviceConnectListener;
 import com.serenegiant.widget.CameraViewInterface;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
-import lombok.Getter;
-import lombok.Setter;
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
     private static final boolean DEBUG = true;    // FIXME set false when production
     private static final String TAG = "!";
+    private static final int GALLERY_REQUEST = 4;
 
     private static final int PREVIEW_WIDTH = 1920;
-
     private static final int PREVIEW_HEIGHT = 1080;
-
-    /**
-     * preview mode
-     * 0:YUYV, other:MJPEG
-     */
-    private static final int PREVIEW_MODE = 1;
-
-    /**
-     * set true if you want to record movie using MediaSurfaceEncoder
-     * (writing frame data into Surface camera from MediaCodec
-     * by almost same way as USBCameratest2)
-     * set false if you want to record movie using MediaVideoEncoder
-     */
-    private static final boolean USE_SURFACE_ENCODER = false;
 
     private LibUVCCameraUSBMonitor usbMonitor;
 
@@ -70,10 +65,20 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private ImageView sideImage;
     private UsbDevice sideCamera;
 
+    /**
+     * Кнопка подтверждения паттерна. Изначально не отображается.
+     * На клик - запрос на добавление TableTop
+     */
+    private Button confirmPattern;
+    /**
+     * Кнопка отклонения паттерна. Изначально не отображается.
+     * На клик - запрос на нахождение паттерна findPattern
+     */
+    private Button cancelPattern;
+    private int cancelCount;
+
     private boolean isFindPattern = false;
 
-    @Setter
-    @Getter
     private FindPatternResponse pattern;
 
     @Override
@@ -86,15 +91,35 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
-        Button confirmPattern = (Button) findViewById(R.id.confirm_pattern_button);
-        confirmPattern.setVisibility(View.INVISIBLE);
+        confirmPattern = (Button) findViewById(R.id.confirm_pattern_button);
+        confirmPattern.setActivated(false);
         confirmPattern.setOnClickListener(view -> {
+            confirmPattern.setActivated(false);
+            cancelPattern.setActivated(false);
             TableTopApi.addTableTop(pattern);
+        });
+
+        cancelPattern = (Button) findViewById(R.id.cancel_pattern_button);
+        cancelPattern.setActivated(false);
+        cancelPattern.setOnClickListener(view -> {
+            if(cancelCount > 2) {
+                // TODO логика вызова бригадира
+                return;
+            }
+            confirmPattern.setActivated(false);
+            cancelPattern.setActivated(false);
+            TableTopPatternApi.findPattern(
+                    this,
+                    photo,
+                    photo);
+            cancelCount++;
         });
 
         Button scan = (Button) findViewById(R.id.scan_button);
         scan.setOnClickListener(view -> {
-            PythonApi.test(this);
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, GALLERY_REQUEST);
+
 //            pattern = true;
 //            mainHandler.setPreviewCallback(mainFrameCallback);
         });
@@ -131,6 +156,32 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 
         usbMonitor = new LibUVCCameraUSBMonitor(this, mOnDeviceConnectListener);
+    }
+
+    private Bitmap photo = null;
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && data != null) {
+
+            if (requestCode == GALLERY_REQUEST) {
+                try {
+                    photo = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (photo != null & requestCode == GALLERY_REQUEST) {
+//                TableTopPatternApi.addPattern(photo,
+//                        photo);
+
+                TableTopPatternApi.findPattern(
+                        this,
+                        photo,
+                        photo);
+            }
+        }
     }
 
     @Override
@@ -182,7 +233,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     @Override
     protected void onResume() {
         super.onResume();
-        openCameras();
+//        openCameras();
     }
 
     private void openCameras(){
@@ -348,30 +399,61 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
     private void processImages() {
         Log.d(TAG, "processImages");
-        PythonApi.processImages(
-                this,
-                mainBitmap.getBitmap(),
-                sideBitmap.cropAndResult(0, 0, 100, 100),
-                mainImage,
-                () -> {
-                    Log.d(TAG, "CallBAck");
-                    timer.schedule(new TimerTask() {
-                        public void run() {
-                            Log.d(TAG, "TASK");
+//        PythonApi.processImages(
+//                this,
+//                mainBitmap.getBitmap(),
+//                sideBitmap.cropAndResult(0, 0, 100, 100),
+//                mainImage,
+//                () -> {
+//                    Log.d(TAG, "CallBAck");
+//                    timer.schedule(new TimerTask() {
+//                        public void run() {
+//                            Log.d(TAG, "TASK");
+//
+//                            mainSaved = false;
+//                            sideSaved = false;
+//                            if (mainHandler != null && mainHandler.isOpened()) {
+//                                mainBitmap = null;
+//                                mainHandler.setPreviewCallback(mainFrameCallback);
+//                            }
+//                            if (sideHandler != null && sideHandler.isOpened()) {
+//                                mainBitmap = null;
+//                                sideHandler.setPreviewCallback(sideFrameCallback);
+//                            }
+//                        }
+//                    }, 10 * 1000);
+//                });
+    }
 
-                            mainSaved = false;
-                            sideSaved = false;
-                            if (mainHandler != null && mainHandler.isOpened()) {
-                                mainBitmap = null;
-                                mainHandler.setPreviewCallback(mainFrameCallback);
-                            }
-                            if (sideHandler != null && sideHandler.isOpened()) {
-                                mainBitmap = null;
-                                sideHandler.setPreviewCallback(sideFrameCallback);
-                            }
-                        }
-                    }, 10 * 1000);
-                });
+    public void setPattern(FindPatternResponse pattern,
+                           String article,
+                           String name,
+                           String material){
+        this.pattern = pattern;
+        confirmPattern.setActivated(true);
+        cancelPattern.setActivated(true);
+        if(article != null)
+            ((TextView) findViewById(R.id.article_view)).setText(article);
+
+        if(name != null)
+            ((TextView) findViewById(R.id.name_view)).setText(name);
+
+        if(material != null)
+            ((TextView) findViewById(R.id.material_view)).setText(material);
+
+        // вывод картинки
+        mainImage.setImageBitmap(toBitmap(pattern.getTableTopImage()));
+
+        // вывод цветов
+        ListView colors = (ListView) findViewById(R.id.colors);
+        List<RGB> rgb = new ArrayList<>();
+        for (int i = 0; i < pattern.getColors().size(); i++) {
+            rgb.add(new RGB(pattern.getColors().get(i)));
+        }
+
+        ColorsAdapter adapter = new ColorsAdapter(this, R.id.colors, rgb);
+        colors.setAdapter(adapter);
+
     }
 
     @Override

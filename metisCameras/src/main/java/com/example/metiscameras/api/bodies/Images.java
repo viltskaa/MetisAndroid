@@ -8,9 +8,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class Images {
-    @SerializedName("maine")
+    @SerializedName("main_image")
     private String mainImage;
 
-    @SerializedName("side")
+    @SerializedName("side_image")
     private String sideImage;
 }

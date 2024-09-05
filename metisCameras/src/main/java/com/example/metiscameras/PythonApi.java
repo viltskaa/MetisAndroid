@@ -38,40 +38,12 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PythonApi {
-    private static final String BASE_URL = "http://192.168.61.208:5000/v1/android/";
-    private static final String TABLE_TOP_PATTERN_URL = "http://192.168.1.57:5000/v1/table_top_pattern/";
-
+/*
     private static final boolean DEBUG = true;    // FIXME set false when production
 
-    private static final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .connectTimeout(120, TimeUnit.SECONDS) // Время ожидания соединения
-            .writeTimeout(120, TimeUnit.SECONDS)   // Время ожидания записи
-            .readTimeout(120, TimeUnit.SECONDS)    // Время ожидания чтения
-            .build();
-
-    private static final OkHttpClient okHttpClientTableTopPattern = new OkHttpClient.Builder()
-            .connectTimeout(120, TimeUnit.SECONDS) // Время ожидания соединения
-            .writeTimeout(120, TimeUnit.SECONDS)   // Время ожидания записи
-            .readTimeout(120, TimeUnit.SECONDS)    // Время ожидания чтения
-            .build();
-
-    private static final Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-
-    private static final Retrofit retrofitTableTopPattern = new Retrofit.Builder()
-            .baseUrl(TABLE_TOP_PATTERN_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-
-    private static final ApiService apiService = retrofit.create(ApiService.class);
-
-    private static final ApiService apiServiceForTableTopPattern = retrofitTableTopPattern.create(ApiService.class);
 
     private static final String TAG = "!";
+
 
     public static void test(Activity activity) {
         if (DEBUG) Log.d(TAG, "test");
@@ -120,6 +92,8 @@ public class PythonApi {
             }
         });
     }
+
+
 
     public static void sendImageToServer(String scannedString) {
         Image image = new Image(scannedString);
@@ -271,4 +245,6 @@ public class PythonApi {
             }
         });
     }
+
+ */
 }

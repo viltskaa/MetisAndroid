@@ -8,7 +8,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
-public interface AndroidService {
+public interface TableTopPatternService {
 
     @POST("add_pattern")
     Call<AddPatternResponse> addPattern(@Body Images requestBody);

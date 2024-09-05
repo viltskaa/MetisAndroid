@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Setter
 @AllArgsConstructor
 public class AddPatternResponse {
     @SerializedName("msg")
@@ -17,6 +16,8 @@ public class AddPatternResponse {
 
     @SerializedName("imgBase64")
     private String image;
-    private List<List<Integer>> colors;
-    private List<List<Integer>> contours;
+    private Float perimeter;
+    private Float width;
+    private Float height;
+    private List<String> colors;
 }

@@ -1,6 +1,7 @@
 package com.example.metiscameras.models;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,7 +42,7 @@ public class ColorsAdapter extends ArrayAdapter<RGB> {
         ImageView image = view.findViewById(R.id.image_color);
 
         BitmapWrapper bitmapW = new BitmapWrapper(1000, 1000);
-        bitmapW.fillWithColor(colors.get(position));
+        bitmapW.fillWithColor(colors.get(position).getColor());
         image.post(() -> {
             synchronized (bitmapW) {
                 image.setImageBitmap(bitmapW.getBitmap());
