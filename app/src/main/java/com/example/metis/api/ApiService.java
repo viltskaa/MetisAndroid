@@ -16,7 +16,7 @@ public interface ApiService {
     @GET("generate_qr")
     Call<ResponseBody> fetchQrCode();
 
-    @POST("processing_cv")
+    @POST("find_pattern")
     Call<ResponseBody> processImage(@Body RequestBody requestBody);
 
     @POST("add_pattern")

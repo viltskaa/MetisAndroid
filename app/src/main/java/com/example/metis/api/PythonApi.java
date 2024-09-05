@@ -100,7 +100,7 @@ public class PythonApi {
 
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("image", imageBase64);
+            jsonObject.put("main_image", imageBase64);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -152,7 +152,7 @@ public class PythonApi {
 
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("image", imageBase64);
+            jsonObject.put("main_image", imageBase64);
         } catch (Exception e) {
             e.printStackTrace();
         }
