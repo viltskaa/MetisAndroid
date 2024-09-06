@@ -33,6 +33,7 @@ public class TableTopApi {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<OnlyMsgResponse> call, @NonNull Response<OnlyMsgResponse> response) {
+                Log.i(TAG, response.toString());
                 if (response.body() == null) {
                     if (DEBUG)
                         Log.i(TAG, "TableTopPatternApi - findPattern - response.body() == null");

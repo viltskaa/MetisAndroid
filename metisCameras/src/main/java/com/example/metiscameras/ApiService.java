@@ -13,6 +13,7 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public interface ApiService {
+    /*
     @POST("receive_image")
     Call<Void> sendImage(@Body Image image);
 
@@ -25,4 +26,6 @@ public interface ApiService {
     @POST("process_images")
     Call<ResponseBody> processImages(@Body Images requestBody);
 
+
+     */
 }

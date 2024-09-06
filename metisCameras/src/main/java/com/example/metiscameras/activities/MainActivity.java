@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Surface;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -108,20 +107,22 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             }
             confirmPattern.setActivated(false);
             cancelPattern.setActivated(false);
-            TableTopPatternApi.findPattern(
-                    this,
-                    photo,
-                    photo);
+            findPattern();
             cancelCount++;
         });
 
         Button scan = (Button) findViewById(R.id.scan_button);
         scan.setOnClickListener(view -> {
+            if (DEBUG) Log.d(TAG, "scan");
+
+            /*
+            // для выбора из галереи
             Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(galleryIntent, GALLERY_REQUEST);
+             */
 
-//            pattern = true;
-//            mainHandler.setPreviewCallback(mainFrameCallback);
+            isFindPattern = true;
+            mainHandler.setPreviewCallback(mainFrameCallback);
         });
 
         Button open = (Button) findViewById(R.id.first_button);
@@ -134,8 +135,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         test.setOnClickListener(view -> {
             if (DEBUG) Log.i(TAG, "test");
 
+
+            isFindPattern = false;
             mainHandler.setPreviewCallback(mainFrameCallback);
-            sideHandler.setPreviewCallback(sideFrameCallback);
+
+//            mainHandler.setPreviewCallback(mainFrameCallback);
+//            sideHandler.setPreviewCallback(sideFrameCallback);
 
         });
 
@@ -355,20 +360,24 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 mainBitmap.updateBitmap(frame);
 
             if (isFindPattern) {
-                addPattern();
+                findPattern();
                 return;
             }
 
-            mainSaved = true;
-            mainImage.post(() -> mainImage.setImageBitmap(mainBitmap.getBitmap()));
-
-            checkBitmaps();
+            addPattern();
+//            mainSaved = true;
+//            mainImage.post(() -> mainImage.setImageBitmap(mainBitmap.getBitmap()));
+//
+//            checkBitmaps();
         }
     };
 
-    private void addPattern() {
-//        PythonApi.checkPattern(this, mainBitmap.getBitmap());
+    private void findPattern() {
+        TableTopPatternApi.findPattern(this, mainBitmap.getBitmap(), mainBitmap.getBitmap());
+    }
 
+    private void addPattern() {
+        TableTopPatternApi.addPattern(mainBitmap.getBitmap(), mainBitmap.getBitmap());
     }
 
     private final IFrameCallback sideFrameCallback = new IFrameCallback() {
@@ -442,7 +451,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             ((TextView) findViewById(R.id.material_view)).setText(material);
 
         // вывод картинки
-        mainImage.setImageBitmap(toBitmap(pattern.getTableTopImage()));
+        sideImage.setImageBitmap(toBitmap(pattern.getTableTopImage()));
 
         // вывод цветов
         ListView colors = (ListView) findViewById(R.id.colors);

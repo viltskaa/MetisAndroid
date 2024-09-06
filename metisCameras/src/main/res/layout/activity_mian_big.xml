@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#ff000000"
     tools:context=".activities.MainActivity"
-    tools:ignore="MergeRootFrame" >
+    tools:ignore="MergeRootFrame">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,11 +18,11 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="395dp"
+            android:layout_height="694dp"
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="358dp"
+                android:layout_width="612dp"
                 android:layout_height="match_parent"
                 android:baselineAligned="false"
                 android:orientation="vertical">
@@ -85,8 +85,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="399dp"
+                    android:orientation="vertical">
 
                     <RelativeLayout
                         android:id="@+id/camera_layout_res"
@@ -175,8 +175,8 @@
 
                 <RelativeLayout
                     android:id="@+id/camera_layout_side"
-                    android:layout_width="432dp"
-                    android:layout_height="164dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_weight="1">
 

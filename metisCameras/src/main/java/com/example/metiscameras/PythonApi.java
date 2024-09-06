@@ -38,7 +38,10 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PythonApi {
-/*
+    /*
+    private static final String BASE_URL = "http://192.168.61.208:5000/v1/android/";
+    private static final String TABLE_TOP_PATTERN_URL = "http://192.168.1.57:5000/v1/table_top_pattern/";
+
     private static final boolean DEBUG = true;    // FIXME set false when production
 
 
@@ -53,7 +56,7 @@ public class PythonApi {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<FindPatternResponse> call, @NonNull Response<FindPatternResponse> response) {
-                if (DEBUG) Log.d(TAG, "Response code " + response.code());
+                if (DEBUG) Log.d(TAG, "Response code " + response);
 
                 FindPatternResponse resp = response.body();
 
