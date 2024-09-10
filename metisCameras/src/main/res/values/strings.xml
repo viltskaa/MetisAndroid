@@ -28,4 +28,15 @@
     <string name="confirm_button" translatable="false">Подтвердить</string>
     <string name="cancel_button" translatable="false">Отклонить</string>
 
+<!--  БЛОК АВТОРИЗАЦИИ  -->
+    <string name="auth" translatable="false">Авторизация</string>
+    <string name="auth_button_confirm" translatable="false">Подтвердить</string>
+    <string name="auth_name_label" translatable="false">Имя</string>
+    <string name="auth_name_hint" translatable="false">Введите ваше имя</string>
+    <string name="auth_surname_label" translatable="false">Фамилия</string>
+    <string name="auth_surname_hint" translatable="false">Введите вашу фамилию</string>
+    <string name="auth_password_label" translatable="false">Пароль</string>
+    <string name="auth_password_hint" translatable="false">Введите пароль</string>
+<!--БЛОК АВТОРИЗАЦИИ КОНЕЦ-->
+
 </resources>

@@ -1,15 +1,16 @@
 package com.example.metiscameras.api;
 
-import static com.example.metiscameras.api.URLS.TABLE_TOP;
+import static com.example.metiscameras.api.URLS.AUTH;
 
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.example.metiscameras.api.bodies.AddTableTopBody;
+import com.example.metiscameras.api.bodies.LoginBody;
 import com.example.metiscameras.api.responses.FindPatternResponse;
 import com.example.metiscameras.api.responses.OnlyMsgResponse;
-import com.example.metiscameras.api.services.TableTopService;
+import com.example.metiscameras.api.services.AuthorizationService;
 
 import java.util.Objects;
 
@@ -18,17 +19,17 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class TableTopApi {
+public class AuthorizationApi {
     private static final boolean DEBUG = true;    // FIXME set false when production
     private static final String TAG = "!";
 
-    private static final Retrofit retrofit = ApiClient.getClient(TABLE_TOP.getUrl());
-    private static final TableTopService tableTopService = retrofit.create(TableTopService.class);
+    private static final Retrofit retrofit = ApiClient.getClient(AUTH.getUrl());
+    private static final AuthorizationService authService = retrofit.create(AuthorizationService.class);
 
-    public static void addTableTop(FindPatternResponse pattern) {
-        if (DEBUG) Log.d(TAG, "TableTopApi -- addTableTop");
+    public static void login(String login, String password) {
+        if (DEBUG) Log.d(TAG, "AuthorizationApi -- login");
 
-        Call<OnlyMsgResponse> call = tableTopService.addTableTop(new AddTableTopBody(pattern));
+        Call<OnlyMsgResponse> call = authService.login(new LoginBody(login, password));
 
         call.enqueue(new Callback<>() {
             @Override
@@ -36,19 +37,20 @@ public class TableTopApi {
                 Log.i(TAG, response.toString());
                 if (response.body() == null) {
                     if (DEBUG)
-                        Log.i(TAG, "TableTopPatternApi - findPattern - response.body() == null");
+                        Log.i(TAG, "AuthorizationApi -- login -- response.body() == null");
                     return;
                 }
 
                 if (DEBUG) Log.i(TAG, response.body().toString());
 
                 OnlyMsgResponse resp = Objects.requireNonNull(response.body());
-                if (DEBUG) Log.i(TAG, "Response code " + response.code() + "/ Message: " + resp.getMessage());
+                if (DEBUG)
+                    Log.i(TAG, "AuthorizationApi -- login -- Response code " + response.code() + "/ Message: " + resp.getMessage());
             }
 
             @Override
             public void onFailure(@NonNull Call<OnlyMsgResponse> call, @NonNull Throwable t) {
-                Log.w(TAG, "onFailure: " + t.getMessage());
+                Log.w(TAG, "AuthorizationApi -- login -- onFailure: " + t.getMessage());
                 t.printStackTrace();
             }
         });

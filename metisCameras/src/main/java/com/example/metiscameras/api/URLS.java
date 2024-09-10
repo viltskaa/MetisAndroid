@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum URLS {
     TABLE_TOP ("http://192.168.128.208:5000/v1/table_top/"),
     TABLE_TOP_PATTERN ("http://192.168.128.208:5000/v1/table_top_pattern/"),
-    ANDROID ("http://192.168.128.208:5000/v1/android/");
+    ANDROID ("http://192.168.128.208:5000/v1/android/"),
+    AUTH("http://192.168.128.208:5000/v1/auth/");
 
     private final String url;
 }

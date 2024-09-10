@@ -11,7 +11,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AddTableTopBodies {
+public class AddTableTopBody {
     @SerializedName("ttp_id")
     private Integer id;
     private Float perimeter;
@@ -21,7 +21,7 @@ public class AddTableTopBodies {
     private String image;
     private List<String> colors;
 
-    public AddTableTopBodies(FindPatternResponse pattern) {
+    public AddTableTopBody(FindPatternResponse pattern) {
         id = pattern.getId();
         perimeter = pattern.getPerimeter();
         width = pattern.getWidth();
