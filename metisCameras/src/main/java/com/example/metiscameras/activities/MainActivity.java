@@ -43,6 +43,8 @@ import java.util.Timer;
 
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
+    private static final boolean ONE_CAMERA = true;    // FIXME для проверки только с главной камеры
+
     private static final boolean DEBUG = true;    // FIXME set false when production
     private static final String TAG = "!";
     private static final int GALLERY_REQUEST = 4;
@@ -111,6 +113,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             cancelCount++;
         });
 
+        // сканирование - поиск паттерна
         Button scan = (Button) findViewById(R.id.scan_button);
         scan.setOnClickListener(view -> {
             if (DEBUG) Log.d(TAG, "scan");
@@ -123,27 +126,30 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
             isFindPattern = true;
             mainHandler.setPreviewCallback(mainFrameCallback);
+            if(!ONE_CAMERA)
+                sideHandler.setPreviewCallback(sideFrameCallback);
         });
 
+        // "включение" камер
         Button open = (Button) findViewById(R.id.first_button);
         open.setOnClickListener(view -> {
             if (DEBUG) Log.d(TAG, "open");
             openCameras();
         });
 
+        // для тестирования какой либо функциональности
         Button test = (Button) findViewById(R.id.test_button);
         test.setOnClickListener(view -> {
             if (DEBUG) Log.i(TAG, "test");
-
-
-            isFindPattern = false;
-            mainHandler.setPreviewCallback(mainFrameCallback);
+//            isFindPattern = false;
+//            mainHandler.setPreviewCallback(mainFrameCallback);
 
 //            mainHandler.setPreviewCallback(mainFrameCallback);
 //            sideHandler.setPreviewCallback(sideFrameCallback);
 
         });
 
+        // "выключение" камер
         Button stop = (Button) findViewById(R.id.second_button);
         stop.setOnClickListener(view -> {
             onStop();
@@ -163,7 +169,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         usbMonitor = new LibUVCCameraUSBMonitor(this, mOnDeviceConnectListener);
     }
 
-    private Bitmap photo = null;
+    private Bitmap photo = null; // FIXME для отправки изображения из галереи
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -237,6 +243,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
     @Override
     protected void onResume() {
+        if (DEBUG) Log.i(TAG, "onResume");
         super.onResume();
 //        openCameras();
     }
@@ -244,6 +251,11 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private void openCameras(){
         try {
             mainCamera = usbMonitor.getDeviceList().get(0);
+            if(ONE_CAMERA){
+                queueEvent(() -> usbMonitor.requestPermission(mainCamera), 0);
+                return;
+            }
+
             sideCamera = usbMonitor.getDeviceList().get(1);
 
             queueEvent(() -> usbMonitor.requestPermission(mainCamera), 0);
@@ -276,7 +288,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     final SurfaceTexture st = mainView.getSurfaceTexture();
                     mainHandler.startPreview(new Surface(st));
 
-                } else if (sideHandler != null && !sideHandler.isOpened() && device.getDeviceId() == sideCamera.getDeviceId()) {
+                } else if (ONE_CAMERA && sideHandler != null && !sideHandler.isOpened() && device.getDeviceId() == sideCamera.getDeviceId()) {
                     if (DEBUG) Log.d(TAG, "StartSide");
                     sideHandler.open(ctrlBlock);
                     final SurfaceTexture st = sideView.getSurfaceTexture();
@@ -291,7 +303,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         public void onDisconnect(final UsbDevice device, final UsbControlBlock ctrlBlock) {
             if (DEBUG) Log.i(TAG, "onDisconnect:" + device.getDeviceId());
 //            if ((sideHandler != null) && !sideHandler.isEqual(device)) {
-            if (sideCamera.getDeviceId() == device.getDeviceId()) {
+            if (ONE_CAMERA && sideCamera.getDeviceId() == device.getDeviceId()) {
                 queueEvent(new Runnable() {
                     @Override
                     public void run() {
@@ -339,9 +351,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     };
 
     BitmapWrapper mainBitmap;
-    private boolean mainSaved;
+    private boolean mainSaved = false;
     BitmapWrapper sideBitmap;
-    private boolean sideSaved;
+    private boolean sideSaved = false;
 
     private final Bitmap bitmap = Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
 
@@ -359,26 +371,14 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             else
                 mainBitmap.updateBitmap(frame);
 
-            if (isFindPattern) {
-                findPattern();
-                return;
-            }
-
-            addPattern();
-//            mainSaved = true;
 //            mainImage.post(() -> mainImage.setImageBitmap(mainBitmap.getBitmap()));
-//
-//            checkBitmaps();
+            mainSaved = true;
+            findPattern();
+
+//            addPattern();
         }
     };
 
-    private void findPattern() {
-        TableTopPatternApi.findPattern(this, mainBitmap.getBitmap(), mainBitmap.getBitmap());
-    }
-
-    private void addPattern() {
-        TableTopPatternApi.addPattern(mainBitmap.getBitmap(), mainBitmap.getBitmap());
-    }
 
     private final IFrameCallback sideFrameCallback = new IFrameCallback() {
         @Override
@@ -392,63 +392,81 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             else
                 sideBitmap.updateBitmap(frame);
 
-            sideSaved = true;
             sideImage.post(() -> sideImage.setImageBitmap(sideBitmap.cropAndResult(0, 0, 500, 500)));
+            sideSaved = true;
 
-            checkBitmaps();
+            findPattern();
         }
     };
 
-    private void checkBitmaps() {
-        if (!mainSaved || !sideSaved)
+    private void findPattern() {
+        if(!checkBitmaps())
             return;
 
-        processImages();
+        mainSaved = false;
+        sideSaved = false;
+        TableTopPatternApi.findPattern(this, mainBitmap.getBitmap(), mainBitmap.getBitmap());
+    }
+
+    private void addPattern() {
+        TableTopPatternApi.addPattern(mainBitmap.getBitmap(), mainBitmap.getBitmap());
+    }
+
+
+    private boolean checkBitmaps() {
+        return mainSaved && sideSaved;
     }
 
     private void processImages() {
         Log.d(TAG, "processImages");
-//        PythonApi.processImages(
-//                this,
-//                mainBitmap.getBitmap(),
-//                sideBitmap.cropAndResult(0, 0, 100, 100),
-//                mainImage,
-//                () -> {
-//                    Log.d(TAG, "CallBAck");
-//                    timer.schedule(new TimerTask() {
-//                        public void run() {
-//                            Log.d(TAG, "TASK");
-//
-//                            mainSaved = false;
-//                            sideSaved = false;
-//                            if (mainHandler != null && mainHandler.isOpened()) {
-//                                mainBitmap = null;
-//                                mainHandler.setPreviewCallback(mainFrameCallback);
-//                            }
-//                            if (sideHandler != null && sideHandler.isOpened()) {
-//                                mainBitmap = null;
-//                                sideHandler.setPreviewCallback(sideFrameCallback);
-//                            }
-//                        }
-//                    }, 10 * 1000);
-//                });
+        /*
+        PythonApi.processImages(
+                this,
+                mainBitmap.getBitmap(),
+                sideBitmap.cropAndResult(0, 0, 100, 100),
+                mainImage,
+                () -> {
+                    Log.d(TAG, "CallBAck");
+                    timer.schedule(new TimerTask() {
+                        public void run() {
+                            Log.d(TAG, "TASK");
+
+                            mainSaved = false;
+                            sideSaved = false;
+                            if (mainHandler != null && mainHandler.isOpened()) {
+                                mainBitmap = null;
+                                mainHandler.setPreviewCallback(mainFrameCallback);
+                            }
+                            if (sideHandler != null && sideHandler.isOpened()) {
+                                mainBitmap = null;
+                                sideHandler.setPreviewCallback(sideFrameCallback);
+                            }
+                        }
+                    }, 10 * 1000);
+                });
+
+         */
     }
 
-    public void setPattern(FindPatternResponse pattern,
-                           String article,
-                           String name,
-                           String material){
+
+
+    /**
+     * Метод вызывается из TableTopPatternApi - findPattern
+     *
+     * @param pattern  десериализованный ответ на запрос findPattern
+     */
+    public void setPattern(FindPatternResponse pattern){
         this.pattern = pattern;
         confirmPattern.setActivated(true);
         cancelPattern.setActivated(true);
-        if(article != null)
-            ((TextView) findViewById(R.id.article_view)).setText(article);
+        if(pattern.getArticle() != null)
+            ((TextView) findViewById(R.id.article_view)).setText(pattern.getArticle());
 
-        if(name != null)
-            ((TextView) findViewById(R.id.name_view)).setText(name);
+        if(pattern.getName() != null)
+            ((TextView) findViewById(R.id.name_view)).setText(pattern.getName());
 
-        if(material != null)
-            ((TextView) findViewById(R.id.material_view)).setText(material);
+        if(pattern.getMaterial() != null)
+            ((TextView) findViewById(R.id.material_view)).setText(pattern.getMaterial());
 
         // вывод картинки
         sideImage.setImageBitmap(toBitmap(pattern.getTableTopImage()));
@@ -464,6 +482,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         colors.setAdapter(adapter);
 
     }
+
 
     @Override
     public LibUVCCameraUSBMonitor getUSBMonitor() {

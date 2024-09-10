@@ -55,11 +55,7 @@ public class TableTopPatternApi {
                     try {
                         if (DEBUG) Log.i(TAG, resp.toString());
 
-                        activity.setPattern(
-                                resp,
-                                resp.getArticle(),
-                                resp.getName(),
-                                resp.getMaterial());
+                        activity.setPattern(resp);
 
                     } catch (Exception e) {
                         e.printStackTrace();
