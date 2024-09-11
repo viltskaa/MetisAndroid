@@ -1,9 +1,11 @@
 package com.example.metiscameras.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +21,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class AuthorizationActivity extends AppCompatActivity {
     private static final boolean DEBUG = true;    // FIXME set false when production
     private static final String TAG = "!";
+
+
+    /**
+     * подумать над тем, что при вылете из мейна как то туда опять заходить (возможно заного через авторизацию)
+     */
+    private boolean isAuthorized;
 
 
     @Override
@@ -42,7 +50,19 @@ public class AuthorizationActivity extends AppCompatActivity {
             String password = ((EditText) findViewById(R.id.auth_password_input)).getText().toString();
 
             String login = DigestUtils.md5Hex(surname + name).toUpperCase();
-            AuthorizationApi.login(login, password);
+            AuthorizationApi.login(this, login, password);
         });
+    }
+
+    public void onLogin(boolean authorized, String msg){
+        if (DEBUG) Log.i(TAG, "onLogin");
+        if(!authorized){
+            Toast.makeText(this, "Ошибка авторизации. Ответ сервера: " + msg, Toast.LENGTH_SHORT).show();
+            // TODO вызов бригадира ?????
+            return;
+        }
+
+        Intent main = new Intent(this, MainActivity.class);
+        startActivity(main);
     }
 }
