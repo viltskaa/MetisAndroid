@@ -44,13 +44,16 @@ public class AuthorizationActivity extends AppCompatActivity {
 
         Button confirm = (Button) findViewById(R.id.auth_button);
         confirm.setOnClickListener(view -> {
-            if (DEBUG) Log.i(TAG, "confirm.setOnClickListener");
-            String name = ((EditText) findViewById(R.id.auth_name_input)).getText().toString();
-            String surname = ((EditText) findViewById(R.id.auth_surname_input)).getText().toString();
-            String password = ((EditText) findViewById(R.id.auth_password_input)).getText().toString();
+            Intent main = new Intent(this, MainActivity.class);
+            startActivity(main);
 
-            String login = DigestUtils.md5Hex(surname + name).toUpperCase();
-            AuthorizationApi.login(this, login, password);
+//            if (DEBUG) Log.i(TAG, "confirm.setOnClickListener");
+//            String name = ((EditText) findViewById(R.id.auth_name_input)).getText().toString();
+//            String surname = ((EditText) findViewById(R.id.auth_surname_input)).getText().toString();
+//            String password = ((EditText) findViewById(R.id.auth_password_input)).getText().toString();
+//
+//            String login = DigestUtils.md5Hex(surname + name).toUpperCase();
+//            AuthorizationApi.login(this, login, password);
         });
     }
 
